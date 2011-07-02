@@ -1,27 +1,10 @@
 #include <cnet.h>
 #include <stdlib.h>
 #include <string.h>
-
-/*  This is an implementation of a stop-and-wait data link protocol.
-    It is based on Tanenbaum's `protocol 4', 2nd edition, p227
-    (or his 3rd edition, p205).
-    This protocol employs only data and acknowledgement frames -
-    piggybacking and negative acknowledgements are not used.
-
-    It is currently written so that only one node (number 0) will
-    generate and transmit messages and the other (number 1) will receive
-    them. This restriction seems to best demonstrate the protocol to
-    those unfamiliar with it.
-    The restriction can easily be removed by "commenting out" the line
-
-            if(nodeinfo.nodenumber == 0)
-
-    in reboot_node(). Both nodes will then transmit and receive (why?).
-
-    Note that this file only provides a reliable data-link layer for a
-    network of 2 nodes.
+/*
+ *	milstone1.c
+ *	last update 23:28 02.07.2011 Haiyang Xu benzaku@gmail.com
  */
-
 
 typedef enum    { DL_DATA, DL_ACK }   FRAMEKIND;
 
@@ -67,13 +50,13 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
 
     case DL_DATA: {
 
-        printf(" DATA transmitted, seq=%d\n", seqno);
+        //printf(" DATA transmitted, seq=%d\n", seqno);
         memcpy(&f.msg, (char *)msg, (int)length);
 
         timeout = FRAME_SIZE(f)*((CnetTime)8000000 / linkinfo[link].bandwidth) +
                                 linkinfo[link].propagationdelay;
 
-        lasttimer = CNET_start_timer(EV_TIMER1, 2 * timeout, 0);
+        lasttimer = CNET_start_timer(EV_TIMER1, 1.005 * timeout, 0);
         break;
       }
     }
@@ -90,7 +73,7 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
     CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
     CNET_disable_application(ALLNODES);
 
-    printf("down from application, seq=%d\n", nextframetosend);
+    //printf("down from application, seq=%d\n", nextframetosend);
     transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
     nextframetosend = 1-nextframetosend;
 }
@@ -113,15 +96,15 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
         break;
 
     case DL_DATA :
-        printf("\t\t\t\tDATA received, seq=%d, ", f.seq);
-        if(f.seq == frameexpected) {
-            printf("up to application\n");
+        //printf("\t\t\t\tDATA received, seq=%d, ", f.seq);
+        //if(f.seq == frameexpected) {
+            //printf("up to application\n");
             len = f.len;
             CHECK(CNET_write_application((char *)&f.msg, &len));
             frameexpected = 1-frameexpected;
-        }
-        else
-            printf("ignored\n");
+        //}
+        //else
+            //printf("ignored\n");
 		break;
     }
 }
@@ -153,7 +136,7 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     if(timer == lasttimer) {
-        printf("timeout, seq=%d\n", ackexpected);
+        //printf("timeout, seq=%d\n", ackexpected);
     	CNET_enable_application(ALLNODES);
 	}
 }
