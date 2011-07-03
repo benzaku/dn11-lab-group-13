@@ -3,21 +3,28 @@
 #include <string.h>
 /*
  *	milstone1.c
- *	last update 23:28 02.07.2011 Haiyang Xu benzaku@gmail.com
+ *	Finished coding		23:28		02.07.2011
+ *						Haiyang 	Xu
+ *						benzaku@gmail.com
+ *	Refine				14:50 		03.07.2011
+ *						Haiyang		Xu
+ *						benzaku@gmail.com
  */
 
 typedef enum    { DL_DATA, DL_ACK }   FRAMEKIND;
 
-typedef struct {
+typedef struct
+{
     char        data[MAX_MESSAGE_SIZE];
 } MSG;
 
-typedef struct {
-    FRAMEKIND    kind;          /* only ever DL_DATA or DL_ACK */
-    size_t len;           /* the length of the msg field only */
-    int          checksum;      /* checksum of the whole frame */
-    int          seq;           /* only ever 0 or 1 */
-    MSG          msg;
+typedef struct
+{
+    FRAMEKIND	kind;          /* only ever DL_DATA or DL_ACK */
+    size_t 		len;           /* the length of the msg field only */
+    int         checksum;      /* checksum of the whole frame */
+    int         seq;           /* only ever 0 or 1 */
+    MSG         msg;
 } FRAME;
 
 #define FRAME_HEADER_SIZE  (sizeof(FRAME) - sizeof(MSG))
@@ -32,7 +39,9 @@ static  int             ackexpected             = 0;
 static  int             nextframetosend         = 0;
 static  int             frameexpected           = 0;
 
-
+/*
+ *	function to handle frame transmition
+ */
 static void transmit_frame(MSG *msg, FRAMEKIND kind,
                            size_t length, int seqno)
 {
@@ -43,28 +52,30 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
     f.seq       = seqno;
     f.checksum  = 0;
     f.len       = length;
-	CnetTime	timeout;
-    switch (kind) {
+    CnetTime	timeout;
+    switch (kind)
+    {
     case DL_ACK :
-		break;
+        break;
 
-    case DL_DATA: {
+    case DL_DATA:
+    {
 
-        //printf(" DATA transmitted, seq=%d\n", seqno);
         memcpy(&f.msg, (char *)msg, (int)length);
 
         timeout = FRAME_SIZE(f)*((CnetTime)8000000 / linkinfo[link].bandwidth) +
-                                linkinfo[link].propagationdelay;
+                  linkinfo[link].propagationdelay;
 
         lasttimer = CNET_start_timer(EV_TIMER1, 1.005 * timeout, 0);
         break;
-      }
+    }
     }
     length      = FRAME_SIZE(f);
     CHECK(CNET_write_physical(link, (char *)&f, &length));
 }
-
-
+/*
+ *  function to handle application ready event
+ */
 static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     CnetAddr destaddr;
@@ -77,7 +88,9 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
     nextframetosend = 1-nextframetosend;
 }
 
-
+/*
+ *	function to handle physical ready event
+ */
 static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     FRAME        f;
@@ -90,15 +103,16 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
     checksum    = f.checksum;
     f.checksum  = 0;
 
-    switch (f.kind) {
+    switch (f.kind)
+    {
     case DL_ACK :
         break;
 
     case DL_DATA :
-            len = f.len;
-            CHECK(CNET_write_application((char *)&f.msg, &len));
-            frameexpected = 1-frameexpected;
-		break;
+        len = f.len;
+        CHECK(CNET_write_application((char *)&f.msg, &len));
+        frameexpected = 1-frameexpected;
+        break;
     }
 }
 
@@ -108,16 +122,17 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
     CnetDrawFrame *df   = (CnetDrawFrame *)data;
     FRAME         *f    = (FRAME *)df->frame;
 
-    switch (f->kind) {
+    switch (f->kind)
+    {
     case DL_ACK :
-		df->nfields		 = 1;
+        df->nfields		 = 1;
         df->colours[0]   = (f->seq == 0) ? "red" : "purple";
         df->pixels[0]   = 10;
         sprintf(df->text, "%d", f->seq);
         break;
 
     case DL_DATA :
-		df->nfields		 = 2;
+        df->nfields		 = 2;
         df->colours[0]   = (f->seq == 0) ? "red" : "purple";
         df->pixels[0]   = 10;
         df->colours[1]   = "green";
@@ -127,26 +142,34 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
     }
 }
 
-
+/*
+ *	function to handle timeout event
+ *	When a frame has been put down to physical layer, it needs time to transmit
+ *	During its transmition all applications are disabled to avoid collision
+ *	So a timer is started and will expired until the estimated transmitted time
+ *	Then applications in all nodes are enabled again
+ */
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
-    if(timer == lasttimer) {
-    	CHECK(CNET_enable_application(ALLNODES));
-	}
+    if(timer == lasttimer)
+    {
+        CHECK(CNET_enable_application(ALLNODES));
+    }
 }
 
 
 static void showstate(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     printf(
-    "\n\tackexpected\t= %d\n\tnextframetosend\t= %d\n\tframeexpected\t= %d\n",
-                    ackexpected, nextframetosend, frameexpected);
+        "\n\tackexpected\t= %d\n\tnextframetosend\t= %d\n\tframeexpected\t= %d\n",
+        ackexpected, nextframetosend, frameexpected);
 }
 
 
 void reboot_node(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
-    if(nodeinfo.nodenumber > 1) {
+    if(nodeinfo.nodenumber > 1)
+    {
         fprintf(stderr,"This is not a 2-node network!\n");
         exit(1);
     }
