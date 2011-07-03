@@ -71,9 +71,8 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 
     lastlength  = sizeof(MSG);
     CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
-    CNET_disable_application(ALLNODES);
+    CHECK(CNET_disable_application(ALLNODES));
 
-    //printf("down from application, seq=%d\n", nextframetosend);
     transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
     nextframetosend = 1-nextframetosend;
 }
@@ -96,15 +95,9 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
         break;
 
     case DL_DATA :
-        //printf("\t\t\t\tDATA received, seq=%d, ", f.seq);
-        //if(f.seq == frameexpected) {
-            //printf("up to application\n");
             len = f.len;
             CHECK(CNET_write_application((char *)&f.msg, &len));
             frameexpected = 1-frameexpected;
-        //}
-        //else
-            //printf("ignored\n");
 		break;
     }
 }
@@ -138,8 +131,7 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     if(timer == lasttimer) {
-        //printf("timeout, seq=%d\n", ackexpected);
-    	CNET_enable_application(ALLNODES);
+    	CHECK(CNET_enable_application(ALLNODES));
 	}
 }
 
@@ -169,6 +161,5 @@ void reboot_node(CnetEvent ev, CnetTimerID timer, CnetData data)
 
     CHECK(CNET_set_debug_string( EV_DEBUG0, "State"));
 
-//    if(nodeinfo.nodenumber == 0)
-        CNET_enable_application(ALLNODES);
+    CHECK(CNET_enable_application(ALLNODES));
 }
