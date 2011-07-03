@@ -117,12 +117,14 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
 
     switch (f->kind) {
     case DL_ACK :
+		df->nfields		 = 1;
         df->colours[0]   = (f->seq == 0) ? "red" : "purple";
         df->pixels[0]   = 10;
         sprintf(df->text, "%d", f->seq);
         break;
 
     case DL_DATA :
+		df->nfields		 = 2;
         df->colours[0]   = (f->seq == 0) ? "red" : "purple";
         df->pixels[0]   = 10;
         df->colours[1]   = "green";
