@@ -1,6 +1,7 @@
 #include <cnet.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 /*
  *	milstone1.c
  *	Finished coding		23:28		02.07.2011
@@ -32,7 +33,7 @@ typedef struct
 #define	CN_RED				"red"
 
 static  MSG             *lastmsg;
-static  size_t		    lastlength              = 0;
+static  size_t		lastlength              = 0;
 static  CnetTimerID     lasttimer               = NULLTIMER;
 
 static  int             ackexpected             = 0;
@@ -45,34 +46,43 @@ static  int             frameexpected           = 0;
 static void transmit_frame(MSG *msg, FRAMEKIND kind,
                            size_t length, int seqno)
 {
-    FRAME       f;
-    int         link = 1;
+  FRAME       f;
+  int         link = 1;
 
-    f.kind      = kind;
-    f.seq       = seqno;
-    f.checksum  = 0;
-    f.len       = length;
-    CnetTime	timeout;
+  f.kind      = kind;
+  f.seq       = seqno;
+  f.checksum  = 0;
+  f.len       = linkinfo[link].mtu - FRAME_HEADER_SIZE;
+  CnetTime	timeout;
+
+  int iter = 0;
+  while(iter < sizeof(msg)){
+  
     switch (kind)
     {
-    case DL_ACK :
-        break;
+      case DL_ACK:
+	break;
 
-    case DL_DATA:
-    {
+      case DL_DATA:
+      {	
+	if(sizeof(msg) < f.len) memcpy(&f.msg, (char *)msg, length);
+	else {
+	  memcpy(&f.msg, (char *)msg, f.len);
+	  // TODO reduce msg to the substring of msg from position "f.len + 1" to end
+	}
 
-        memcpy(&f.msg, (char *)msg, (int)length);
+	timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
 
-        timeout = FRAME_SIZE(f)*((CnetTime)8000000 / linkinfo[link].bandwidth) +
-                  linkinfo[link].propagationdelay;
-
-        lasttimer = CNET_start_timer(EV_TIMER1, 1.005 * timeout, 0);
-        break;
-    }
+	lasttimer = CNET_start_timer(EV_TIMER1, 1.005 * timeout, 0);
+	break;	
+      }
     }
     length      = FRAME_SIZE(f);
     CHECK(CNET_write_physical(link, (char *)&f, &length));
+    iter = iter + f.len;
+  }
 }
+
 /*
  *  function to handle application ready event
  */
