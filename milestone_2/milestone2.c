@@ -40,6 +40,9 @@ static  int             ackexpected             = 0;
 static  int             nextframetosend         = 0;
 static  int             frameexpected           = 0;
 
+static int iter = 0;
+static char             receiveBuffer[MAX_MESSAGE_SIZE];
+
 /*
  *	function to handle frame transmition
  */
@@ -55,7 +58,8 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
   f.len       = linkinfo[link].mtu - FRAME_HEADER_SIZE;
   CnetTime	timeout;
 
-  int iter = 0;
+  char *str = msg->data;
+  
   while(iter < sizeof(msg)){
   
     switch (kind)
@@ -65,10 +69,10 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
 
       case DL_DATA:
       {	
-	if(sizeof(msg) < f.len) memcpy(&f.msg, (char *)msg, length);
+	if(sizeof(msg) < f.len) memcpy(&f.msg, str, length);
 	else {
-	  memcpy(&f.msg, (char *)msg, f.len);
-	  // TODO reduce msg to the substring of msg from position "f.len + 1" to end
+	  memcpy(&f.msg, str, f.len);
+          str = str + f.len;
 	}
 
 	timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
@@ -89,6 +93,8 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
 static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     CnetAddr destaddr;
+    iter = 0;
+    strcpy(receiveBuffer,"");
 
     lastlength  = sizeof(MSG);
     CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
@@ -106,24 +112,39 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
     FRAME        f;
     size_t		 len;
     int          link, checksum;
-
+        
     len         = sizeof(FRAME);
     CHECK(CNET_read_physical(&link, (char *)&f, &len));
 
     checksum    = f.checksum;
-    f.checksum  = 0;
+    f.checksum  = 0; 
+    
+    strcat(receiveBuffer,(char *)&f.msg);
+    iter = iter - f.len;
 
-    switch (f.kind)
-    {
-    case DL_ACK :
-        break;
+    if(iter <= 0 ) {
+      
+//       FRAME       f_all;
+// 
+//       f_all.kind      = f.kind;
+//       f_all.seq       = f.seq;
+//       f_all.checksum  = f.checksum;
+//       f_all.len       = lastlength;
+//       memcpy(&f_all.msg, receiveBuffer, f_all.len);
+      
+      switch (f.kind)
+      {
+      case DL_ACK :
+          break;
 
-    case DL_DATA :
-        len = f.len;
-        CHECK(CNET_write_application((char *)&f.msg, &len));
+      case DL_DATA :
+        len = lastlength;
+        CHECK(CNET_write_application(receiveBuffer, &len));
         frameexpected = 1-frameexpected;
         break;
+      }
     }
+
 }
 
 
