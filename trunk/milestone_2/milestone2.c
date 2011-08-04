@@ -25,6 +25,7 @@ typedef struct
     size_t 		len;           /* the length of the msg field only */
     int         checksum;      /* checksum of the whole frame */
     int         seq;           /* only ever 0 or 1 */
+    int         frameEnd;
     MSG         msg;
 } FRAME;
 
@@ -40,7 +41,6 @@ static  int             ackexpected             = 0;
 static  int             nextframetosend         = 0;
 static  int             frameexpected           = 0;
 
-static int iter = 0;
 static char             receiveBuffer[MAX_MESSAGE_SIZE];
 
 /*
@@ -56,11 +56,16 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
   f.seq       = seqno;
   f.checksum  = 0;
   f.len       = linkinfo[link].mtu - FRAME_HEADER_SIZE;
+  f.frameEnd  = 0;
   CnetTime	timeout;
-
-  char *str = msg->data;
   
-  while(iter < sizeof(msg)){
+  char *str = msg->data;
+  size_t frameSize;
+  printf("length of msg %d, len of frame %d\n", length, f.len);
+  
+  CnetTime sumOfTimeout = 0;
+  
+  while(length > 0){
   
     switch (kind)
     {
@@ -68,22 +73,36 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
 	break;
 
       case DL_DATA:
-      {	
-	if(sizeof(msg) < f.len) memcpy(&f.msg, str, length);
+      {	 
+        if(length < f.len){ 
+          memcpy(&f.msg, str, length);
+          f.frameEnd = 1;
+          printf("case of last frame\n");
+          
+          timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
+          sumOfTimeout = sumOfTimeout + timeout;
+          lasttimer = CNET_start_timer(EV_TIMER1, sumOfTimeout, 0);
+        }
 	else {
 	  memcpy(&f.msg, str, f.len);
           str = str + f.len;
+          printf("case of frame reduce\n");
+          
+          timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
+          printf("timeout is %d\n", timeout);
+          sumOfTimeout = sumOfTimeout + timeout;
 	}
-
-	timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
-
-	lasttimer = CNET_start_timer(EV_TIMER1, 1.005 * timeout, 0);
 	break;	
       }
     }
-    length      = FRAME_SIZE(f);
-    CHECK(CNET_write_physical(link, (char *)&f, &length));
-    iter = iter + f.len;
+    
+    printf(" last frame? %d\n", f.frameEnd);
+    frameSize = FRAME_SIZE(f);
+    printf(" frame size %d\n", frameSize);
+    CHECK(CNET_write_physical(link, (char *)&f, &frameSize));
+    length = length - f.len;
+    printf(" remaining length of msg %d\n", length);
+    
   }
 }
 
@@ -93,9 +112,7 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
 static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     CnetAddr destaddr;
-    iter = 0;
-    strcpy(receiveBuffer,"");
-
+    
     lastlength  = sizeof(MSG);
     CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
     CHECK(CNET_disable_application(ALLNODES));
@@ -115,22 +132,15 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
         
     len         = sizeof(FRAME);
     CHECK(CNET_read_physical(&link, (char *)&f, &len));
+    
+//     printf("%d", f.frameEnd);
 
     checksum    = f.checksum;
     f.checksum  = 0; 
     
     strcat(receiveBuffer,(char *)&f.msg);
-    iter = iter - f.len;
 
-    if(iter <= 0 ) {
-      
-//       FRAME       f_all;
-// 
-//       f_all.kind      = f.kind;
-//       f_all.seq       = f.seq;
-//       f_all.checksum  = f.checksum;
-//       f_all.len       = lastlength;
-//       memcpy(&f_all.msg, receiveBuffer, f_all.len);
+    if(f.frameEnd < 1) {
       
       switch (f.kind)
       {
@@ -138,8 +148,9 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
           break;
 
       case DL_DATA :
-        len = lastlength;
+        len =  sizeof(receiveBuffer);
         CHECK(CNET_write_application(receiveBuffer, &len));
+        strcpy(receiveBuffer,"");
         frameexpected = 1-frameexpected;
         break;
       }
@@ -184,7 +195,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     if(timer == lasttimer)
     {
-        CHECK(CNET_enable_application(ALLNODES));
+//         CHECK(CNET_enable_application(ALLNODES));
     }
 }
 
