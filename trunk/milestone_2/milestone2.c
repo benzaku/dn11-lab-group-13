@@ -57,13 +57,13 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
   f.checksum  = 0;
   f.len       = linkinfo[link].mtu - FRAME_HEADER_SIZE;
   f.frameEnd  = 0;
-  CnetTime	timeout;
+//   CnetTime	timeout;
   
   char *str = msg->data;
   size_t frameSize;
   printf("length of msg %d, len of frame %d\n", length, f.len);
   
-  CnetTime sumOfTimeout = 0;
+//   CnetTime sumOfTimeout = 0;
   
   while(length > 0){
   
