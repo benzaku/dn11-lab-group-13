@@ -79,18 +79,18 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
           f.frameEnd = 1;
           printf("case of last frame\n");
           
-          timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
-          sumOfTimeout = sumOfTimeout + timeout;
-          lasttimer = CNET_start_timer(EV_TIMER1, sumOfTimeout, 0);
+//           timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
+//           sumOfTimeout = sumOfTimeout + timeout;
+//           lasttimer = CNET_start_timer(EV_TIMER1, sumOfTimeout, 0);
         }
 	else {
 	  memcpy(&f.msg, str, f.len);
           str = str + f.len;
           printf("case of frame reduce\n");
           
-          timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
-          printf("timeout is %d\n", timeout);
-          sumOfTimeout = sumOfTimeout + timeout;
+//           timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
+//           printf("timeout is %d\n", timeout);
+//           sumOfTimeout = sumOfTimeout + timeout;
 	}
 	break;	
       }
