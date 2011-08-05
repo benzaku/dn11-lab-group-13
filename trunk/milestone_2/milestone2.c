@@ -24,7 +24,7 @@ typedef struct
     FRAMEKIND	kind;          /* only ever DL_DATA or DL_ACK */
     size_t 		len;           /* the length of the msg field only */
     int         checksum;      /* checksum of the whole frame */
-    int         seq;           /* only ever 0 or 1 */
+    int         seq;           
     int         frameEnd;
     MSG         msg;
 } FRAME;
@@ -41,14 +41,18 @@ static  int             ackexpected             = 0;
 static  int             nextframetosend         = 0;
 static  int             frameexpected           = 0;
 
-static char             receiveBuffer[MAX_MESSAGE_SIZE];
+static char receiveBuffer[MAX_MESSAGE_SIZE];
+static int nextmsgtosend = 0;
+
+
 
 /*
- *	function to handle frame transmition
+ *      function to handle frame transmition
  */
 static void transmit_frame(MSG *msg, FRAMEKIND kind,
                            size_t length, int seqno)
 {
+  printf("we are in transmit_frame\n");
   FRAME       f;
   int         link = 1;
 
@@ -57,90 +61,85 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
   f.checksum  = 0;
   f.len       = linkinfo[link].mtu - FRAME_HEADER_SIZE;
   f.frameEnd  = 0;
-//   CnetTime	timeout;
+  CnetTime   timeout;
+  
+  size_t frameSize;
+  printf("msg length %d\n", strlen((char *)msg));
   
   char *str = msg->data;
-  size_t frameSize;
-  printf("length of msg %d, len of frame %d\n", length, f.len);
+  str = str + f.seq;
   
-//   CnetTime sumOfTimeout = 0;
-  
-  while(length > 0){
-  
-    switch (kind)
-    {
-      case DL_ACK:
-	break;
+  switch (kind)
+  {
+    case DL_ACK:
+      break;
 
-      case DL_DATA:
-      {	 
-        if(length < f.len){ 
-          memcpy(&f.msg, str, length);
-          f.frameEnd = 1;
-          printf("case of last frame\n");
-          
-//           timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
-//           sumOfTimeout = sumOfTimeout + timeout;
-//           lasttimer = CNET_start_timer(EV_TIMER1, sumOfTimeout, 0);
-        }
-	else {
-	  memcpy(&f.msg, str, f.len);
-          str = str + f.len;
-          printf("case of frame reduce\n");
-          
-//           timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
-//           printf("timeout is %d\n", timeout);
-//           sumOfTimeout = sumOfTimeout + timeout;
-	}
-	break;	
+    case DL_DATA:
+    {  
+      if((length - f.seq * f.len) < f.len){ 
+        memcpy(&f.msg, str, length);
+        f.frameEnd = 1;
+        nextframetosend = 0;    
       }
+      else{
+        memcpy(&f.msg, str, f.len);
+        nextframetosend++;
+      }
+      
+      timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
+      lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
+      break;  
     }
-    
-    printf(" last frame? %d\n", f.frameEnd);
-    frameSize = FRAME_SIZE(f);
-    printf(" frame size %d\n", frameSize);
-    CHECK(CNET_write_physical(link, (char *)&f, &frameSize));
-    length = length - f.len;
-    printf(" remaining length of msg %d\n", length);
-    
   }
+  
+  frameSize = FRAME_SIZE(f);
+  CHECK(CNET_write_physical(link, (char *)&f, &frameSize));
+  
 }
+
+
 
 /*
  *  function to handle application ready event
  */
 static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
+  printf("we are in application_ready\n");
+  if (nextmsgtosend){
     CnetAddr destaddr;
     
     lastlength  = sizeof(MSG);
     CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
     CHECK(CNET_disable_application(ALLNODES));
+    nextmsgtosend = 0;
+    nextframetosend = 0;
+  }
 
     transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
-    nextframetosend = 1-nextframetosend;
 }
+
+
 
 /*
  *	function to handle physical ready event
  */
 static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
+    printf("we are in physical_ready\n");
     FRAME        f;
     size_t		 len;
     int          link, checksum;
         
     len         = sizeof(FRAME);
     CHECK(CNET_read_physical(&link, (char *)&f, &len));
+    printf("frameEnd? %d\n", f.frameEnd);
     
-//     printf("%d", f.frameEnd);
-
     checksum    = f.checksum;
     f.checksum  = 0; 
     
     strcat(receiveBuffer,(char *)&f.msg);
 
-    if(f.frameEnd < 1) {
+    if(f.frameEnd) {
       
       switch (f.kind)
       {
@@ -148,10 +147,11 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
           break;
 
       case DL_DATA :
-        len =  sizeof(receiveBuffer);
+        len =  strlen(receiveBuffer);
+        printf("len is %d\n", len);
         CHECK(CNET_write_application(receiveBuffer, &len));
         strcpy(receiveBuffer,"");
-        frameexpected = 1-frameexpected;
+//         frameexpected = 1-frameexpected;
         break;
       }
     }
@@ -195,7 +195,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     if(timer == lasttimer)
     {
-//         CHECK(CNET_enable_application(ALLNODES));
+        CHECK(CNET_enable_application(ALLNODES));
     }
 }
 
@@ -217,6 +217,7 @@ void reboot_node(CnetEvent ev, CnetTimerID timer, CnetData data)
     }
 
     lastmsg     = malloc(sizeof(MSG));
+    nextmsgtosend = 1;
 
     CHECK(CNET_set_handler( EV_APPLICATIONREADY, application_ready, 0));
     CHECK(CNET_set_handler( EV_PHYSICALREADY,    physical_ready, 0));
