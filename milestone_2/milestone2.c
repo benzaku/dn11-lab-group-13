@@ -108,8 +108,8 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
         nextmsgtosend = 0;
         nextframetosend = 0;
         
-//         memcpy(lastmsg, "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh", 48);
-//         lastlength = strlen((char *)lastmsg);
+        strcpy(lastmsg, "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh");
+        lastlength = strlen((char *)lastmsg);
     }
     
     CHECK(CNET_disable_application(ALLNODES));
