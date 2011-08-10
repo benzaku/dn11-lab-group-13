@@ -12,8 +12,8 @@ typedef struct
 
 typedef struct
 {
-    FRAMEKIND	kind;          /* only ever DL_DATA or DL_ACK */
-    size_t 		len;           /* the length of the msg field only */
+    FRAMEKIND   kind;          /* only ever DL_DATA or DL_ACK */
+    size_t              len;           /* the length of the msg field only */
     int         checksum;      /* checksum of the whole frame */
     int         seq;           // seqno of frame within one msg
     int         frameEnd;
@@ -22,10 +22,10 @@ typedef struct
 
 #define FRAME_HEADER_SIZE  (sizeof(FRAME) - sizeof(MSG))
 #define FRAME_SIZE(f)      (FRAME_HEADER_SIZE + f.len)
-#define	CN_RED				"red"
+#define CN_RED                          "red"
 
 static  MSG             *lastmsg;
-static  size_t		lastlength              = 0;
+static  size_t          lastlength              = 0;
 static  CnetTimerID     lasttimer               = NULLTIMER;
 
 static  int             ackexpected             = 0;
@@ -108,8 +108,8 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
         nextmsgtosend = 0;
         nextframetosend = 0;
         
-        strcpy(lastmsg, "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh");
-        lastlength = strlen((char *)lastmsg);
+//         memcpy(lastmsg, "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh", 48);
+//         lastlength = strlen((char *)lastmsg);
     }
     
     CHECK(CNET_disable_application(ALLNODES));
@@ -121,7 +121,7 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 
 
 /*
- *	function to handle physical ready event
+ *      function to handle physical ready event
  */
 static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
@@ -171,14 +171,14 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
     switch (f->kind)
     {
     case DL_ACK :
-        df->nfields		 = 1;
+        df->nfields              = 1;
         df->colours[0]   = (f->seq == 0) ? "red" : "purple";
         df->pixels[0]   = 10;
         sprintf(df->text, "%d", f->seq);
         break;
 
     case DL_DATA :
-        df->nfields		 = 2;
+        df->nfields              = 2;
         df->colours[0]   = (f->seq == 0) ? "red" : "purple";
         df->pixels[0]   = 10;
         df->colours[1]   = "green";
@@ -189,11 +189,11 @@ static void draw_frame(CnetEvent ev, CnetTimerID timer, CnetData data)
 }
 
 /*
- *	function to handle timeout event
- *	When a frame has been put down to physical layer, it needs time to transmit
- *	During its transmition all applications are disabled to avoid collision
- *	So a timer is started and will expired until the estimated transmitted time
- *	Then applications in all nodes are enabled again
+ *      function to handle timeout event
+ *      When a frame has been put down to physical layer, it needs time to transmit
+ *      During its transmition all applications are disabled to avoid collision
+ *      So a timer is started and will expired until the estimated transmitted time
+ *      Then applications in all nodes are enabled again
  */
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
