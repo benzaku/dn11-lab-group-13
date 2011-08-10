@@ -100,10 +100,10 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     printf("we are in application_ready\n");
     if (nextmsgtosend){
-        CnetAddr destaddr;
-        
-        lastlength  = sizeof(MSG);
-        CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
+//         CnetAddr destaddr;
+//         
+//         lastlength  = sizeof(MSG);
+//         CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
         CHECK(CNET_disable_application(ALLNODES));
         nextmsgtosend = 0;
         nextframetosend = 0;
