@@ -36,6 +36,7 @@ static char receiveBuffer[MAX_MESSAGE_SIZE];
 
 static size_t lengthOfReceiveBuffer = 0;
 static int nextmsgtosend = 1;
+static char *n = receiveBuffer;
 
 
 /*
@@ -66,12 +67,13 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
         case DL_DATA:
 
             if((length - f.seq * f.len) <= f.len){
+                printf("This is the last frame\n");
                 str = str + f.seq * f.len;
                 f.len = length - f.seq * f.len;
                 
                 memcpy(&f.msg, str, f.len);
-                printf("contents of msg piece in the %d. frame before transmit %s\n", f.seq, (char *)&f.msg);
-                printf("length of msg piece in the %d. frame before transmit %d\n", f.seq, strlen((char *)&f.msg));
+//                 printf("contents of msg piece in the %d. frame before transmit\n %s\n", f.seq, (char *)&f.msg);
+//                 printf("length of msg piece in the %d. frame before transmit %d\n", f.seq, strlen((char *)&f.msg));
                 
                 f.frameEnd = 1;
                 nextmsgtosend = 1;
@@ -100,22 +102,22 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     printf("we are in application_ready\n");
     if (nextmsgtosend){
-//         CnetAddr destaddr;
-//         
-//         lastlength  = sizeof(MSG);
-//         CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
+        CnetAddr destaddr;
+        
+        lastlength  = sizeof(MSG); // lastlength = 10240
+        CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
         CHECK(CNET_disable_application(ALLNODES));
         nextmsgtosend = 0;
         nextframetosend = 0;
         
-        strcpy((char *)lastmsg, "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh");
-        lastlength = strlen((char *)lastmsg);
+//         strcpy((char *)lastmsg, "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+//         lastlength = strlen((char *)lastmsg);
     }
     
     CHECK(CNET_disable_application(ALLNODES));
     
-    printf("contents of the whole generated msg %s\n", (char *)lastmsg);
-    printf("length of the whole generated msg %d\n", lastlength);
+//     printf("contents of the whole generated msg\n %s\n", (char *)lastmsg);
+//     printf("length of the whole generated msg %d\n", lastlength);
     transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
 }
 
@@ -134,13 +136,14 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
     CHECK(CNET_read_physical(&link, (char *)&f, &len));
     
     checksum    = f.checksum;
-    f.checksum  = 0; 
+    f.checksum  = 0;
     
-    strcat(receiveBuffer, (char *)&f.msg);
+    memcpy(n, (char *)&f.msg, f.len);
+    n = n + f.len;
     
     lengthOfReceiveBuffer = lengthOfReceiveBuffer + f.len;
-    printf("contents of received msg piece in %d. frame %s\n", f.seq, receiveBuffer);
-    printf("length of received msg piece in %d. frame %d\n", f.seq, strlen(receiveBuffer)); 
+//     printf("contents of received msg piece in %d. frame\n %s\n", f.seq, receiveBuffer);
+//     printf("length of received msg piece in %d. frame %d\n", f.seq, strlen(receiveBuffer)); 
 
     if(f.frameEnd) {
         switch (f.kind){
@@ -150,9 +153,10 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 
             case DL_DATA :
                 len = lengthOfReceiveBuffer;
-                printf("contents of the whole received msg %s\n", receiveBuffer);
-                printf("length of the whole received msg %d\n", strlen(receiveBuffer));               
+          /*      printf("contents of the whole received msg\n %s\n", receiveBuffer);
+                printf("length of the whole received msg %d\n", strlen(receiveBuffer));*/               
                 CHECK(CNET_write_application(receiveBuffer, &len));
+                n = &receiveBuffer[0];
                 strcpy(receiveBuffer, "");
                 lengthOfReceiveBuffer = 0;
 //                 frameexpected = 1-frameexpected;
