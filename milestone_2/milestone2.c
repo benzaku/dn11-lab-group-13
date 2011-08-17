@@ -13,7 +13,7 @@ typedef struct
 typedef struct
 {
     FRAMEKIND   kind;          /* only ever DL_DATA or DL_ACK */
-    size_t              len;           /* the length of the msg field only */
+    size_t      len;           /* the length of the msg field only */
     int         checksum;      /* checksum of the whole frame */
     int         seq;           // seqno of frame within one msg
     int         frameEnd;
@@ -45,7 +45,7 @@ static char *n = receiveBuffer;
 static void transmit_frame(MSG *msg, FRAMEKIND kind,
                            size_t length, int seqno)
 {
-    printf("we are in transmit_frame\n");
+//     printf("we are in transmit_frame\n");
 
     FRAME       f;
     int         link = 1;
@@ -67,7 +67,7 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
         case DL_DATA:
 
             if((length - f.seq * f.len) <= f.len){
-                printf("This is the last frame\n");
+//                 printf("This is the last frame\n");
                 str = str + f.seq * f.len;
                 f.len = length - f.seq * f.len;
                 
@@ -84,7 +84,8 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
                 nextframetosend++;
             }
         
-            timeout = FRAME_SIZE(f)*((CnetTime)8000000 / (linkinfo[link].bandwidth * 1024)) + linkinfo[link].propagationdelay;
+            timeout = FRAME_SIZE(f) * (CnetTime)8000000 / linkinfo[link].bandwidth;
+//             timeout = linkinfo[link].propagationdelay;
             lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
             break;  
     }
@@ -100,7 +101,7 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
  */
 static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
-    printf("we are in application_ready\n");
+//     printf("we are in application_ready\n");
     if (nextmsgtosend){
         CnetAddr destaddr;
         
@@ -127,7 +128,7 @@ static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
  */
 static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
-    printf("we are in physical_ready\n");
+//     printf("we are in physical_ready\n");
     FRAME        f;
     size_t       len;
     int          link, checksum;
@@ -153,11 +154,10 @@ static void physical_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 
             case DL_DATA :
                 len = lengthOfReceiveBuffer;
-          /*      printf("contents of the whole received msg\n %s\n", receiveBuffer);
-                printf("length of the whole received msg %d\n", strlen(receiveBuffer));*/               
+//                 printf("contents of the whole received msg\n %s\n", receiveBuffer);
+//                 printf("length of the whole received msg %d\n", strlen(receiveBuffer));               
                 CHECK(CNET_write_application(receiveBuffer, &len));
                 n = &receiveBuffer[0];
-                strcpy(receiveBuffer, "");
                 lengthOfReceiveBuffer = 0;
 //                 frameexpected = 1-frameexpected;
                 break;
