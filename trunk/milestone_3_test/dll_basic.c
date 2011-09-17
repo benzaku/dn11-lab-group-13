@@ -45,10 +45,14 @@ struct queueLK buf;
 static struct elemType temp;
 int down_to_datalink(int link, char *packet, size_t length) {
 
+        printf("down_to_datalink\n");
+        printf("length down_to_datalink %d\n", length);
 	extern void printmsg(char *, size_t);
 
+        
 	//struct elemType temp;
-	temp.length = length;
+
+        temp.length = length;
 	temp.link = link;
 	temp.packet = malloc(length);
 	memcpy(temp.packet, packet, length);
@@ -65,9 +69,11 @@ int down_to_datalink(int link, char *packet, size_t length) {
  PAYLOAD (A PACKET) UP TO THE NETWORK LAYER.
  */
 static EVENT_HANDLER( up_to_datalink) {
+        printf("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
 	extern void printmsg(char *, size_t);
-	DLL_FRAME f;
+	
+        DLL_FRAME f;
 	size_t length;
 	int link;
 
@@ -76,11 +82,13 @@ static EVENT_HANDLER( up_to_datalink) {
 	length = sizeof(DLL_FRAME);
 	CHECK(CNET_read_physical(&link, (char *) &f, &length));
 	//printf("DLL frame : %s\n", (char *) &f);
-	//printmsg((char*) &f, length);
+// 	printmsg((char*) &f, length);
+        printf("length up_to_datalink %d\n", length);
 	CHECK(up_to_network(f.packet, length, link));
 }
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
+        printf("timeouts\n");
 	extern void printmsg(char *, size_t);
 	CnetTime timeout;
 	if (timer == lasttimer) {
@@ -93,7 +101,9 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 					/ linkinfo[temp.link].bandwidth;
 			lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
 			size_t len = temp.length;
+                        printf("length timeouts %d\n", len);
 			CHECK(CNET_write_physical_reliable(temp.link, temp.packet, &len));
+                        printf("write_physical\n");
 			//(temp.packet, len);
 
 			outQueue(&buf);

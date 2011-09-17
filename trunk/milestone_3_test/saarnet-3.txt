@@ -6,7 +6,7 @@ compile = "flooding3.c dll_basic.c nl_table.c queue.c"
 //#include "linktypes.txt"
 buffered = false
 wan-jitter = 0usec
-messagerate = 500ms
+
 
 host SB {
 	x = 45388, y = 44424
