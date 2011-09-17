@@ -1,5 +1,7 @@
 #include <cnet.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "nl_table.h"
 #include "dll_basic.h"
@@ -36,12 +38,18 @@ typedef struct {
 	NL_PACKETKIND kind; /* only ever NL_DATA or NL_ACK */
 	int seqno; /* 0, 1, 2, ... */
 	int hopcount;
+        int checksum;
+        size_t pieceNumber;
+        int pieceEnd;
 	size_t length; /* the length of the msg portion only */
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
 
 #define PACKET_HEADER_SIZE  (sizeof(NL_PACKET) - MAX_MESSAGE_SIZE)
 #define PACKET_SIZE(p)	    (PACKET_HEADER_SIZE + p.length)
+
+static char receiveBuffer[255][MAX_MESSAGE_SIZE];
+static char *rb[255];
 
 
 void printmsg(char * msg, size_t length) {
@@ -53,6 +61,46 @@ void printmsg(char * msg, size_t length) {
 	printf("\n");
 }
 
+
+// here the second parameter is the length of msg of packet!
+void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link){
+                printf("sendPacketPiecesToDatalink\n");
+    
+                size_t maxPacketLength = linkinfo[choose_link].mtu - PACKET_HEADER_SIZE;
+                
+                NL_PACKET *tempPacket = (NL_PACKET *) packet;
+                NL_PACKET piecePacket;
+                
+                piecePacket.src         = tempPacket->src;
+                piecePacket.dest        = tempPacket->dest;
+                piecePacket.kind        = tempPacket->kind;
+                piecePacket.seqno       = tempPacket->seqno;
+                piecePacket.hopcount    = tempPacket->hopcount;
+                piecePacket.pieceNumber = tempPacket->pieceNumber;
+                piecePacket.pieceEnd    = tempPacket->pieceEnd;
+                
+                size_t tempLength = length;
+                char *str = tempPacket->msg;
+                                                
+                while(tempLength > maxPacketLength){
+                    piecePacket.length = maxPacketLength;
+                    memcpy(piecePacket.msg, str, maxPacketLength);
+            
+                    CHECK(down_to_datalink(choose_link, (char *) &piecePacket, PACKET_SIZE(piecePacket)));
+                    piecePacket.pieceNumber = piecePacket.pieceNumber + 1;
+                    str = str + piecePacket.pieceNumber * maxPacketLength;
+                    tempLength = tempLength - piecePacket.pieceNumber * maxPacketLength;
+                }
+                
+                piecePacket.pieceEnd = 1;
+                piecePacket.length = tempLength;
+                memcpy(piecePacket.msg, str, tempLength);
+                //printf("Required link is provided link = %d\n", choose_link);
+                printf("sendPacketPiecesToDatalink %d\n", length);
+                CHECK(down_to_datalink(choose_link, (char *) &piecePacket, PACKET_SIZE(piecePacket)));
+                //printf("Provided link = %d sent! \n", choose_link);
+}
+
 /* ----------------------------------------------------------------------- */
 
 /*  flood3() IS A BASIC ROUTING STRATEGY WHICH TRANSMITS THE OUTGOING PACKET
@@ -60,17 +108,18 @@ void printmsg(char * msg, size_t length) {
  ANY OTHER SPECIFIED LINK.
  */
 static void flood3(char *packet, size_t length, int choose_link, int avoid_link) {
-
+    
+        printf("flood3\n");
+        printf("flood3 %d\n", length);
+        NL_PACKET *p = (NL_PACKET *) packet;
+ 
 	/*  REQUIRED LINK IS PROVIDED - USE IT */
 	if (choose_link != 0) {
-		//printf("Required link is provided link = %d\n", choose_link);
-		CHECK(down_to_datalink(choose_link, packet, length));
-		//printf("Provided link = %d sent! \n", choose_link);
+                sendPacketPiecesToDatalink(packet, p->length, choose_link);
 	}
 
 	/*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
 	else {
-		NL_PACKET *p = (NL_PACKET *) packet;
 		int links_wanted = NL_linksofminhops(p->dest);
 		int link;
 
@@ -82,15 +131,20 @@ static void flood3(char *packet, size_t length, int choose_link, int avoid_link)
 			}
 			if (links_wanted & (1 << link)) /* use this link if wanted */
 			{
-				//printf("semphore=%d \n", get_semphore());
+                         
+                                //printf("semphore=%d \n", get_semphore());
 
 				//printf("in flood3, semphore=%d\n", get_semphore());
 
 				//printf("send to link %d\n", link);
 				//printf("send to link %d =========\n", link);
 				//printmsg(packet, length);
-				CHECK(down_to_datalink(link, packet, length));
+                                
+                                sendPacketPiecesToDatalink(packet, p->length, link);
+// 		        	CHECK(down_to_datalink(link, packet, length));
+				
 				//printf("link = %d sent!\n", link);
+                                
 			}
 		}
 	}
@@ -101,6 +155,8 @@ static void flood3(char *packet, size_t length, int choose_link, int avoid_link)
  PREPARES THEM FOR TRANSMISSION TO OTHER NODES.
  */
 static EVENT_HANDLER( down_to_network) {
+    
+        printf("down_to_network\n");
 	NL_PACKET p;
 
 	p.length = sizeof(p.msg);
@@ -112,10 +168,13 @@ static EVENT_HANDLER( down_to_network) {
 	p.kind = NL_DATA;
 	p.hopcount = 0;
 	p.seqno = NL_nextpackettosend(p.dest);
+        p.pieceNumber = 0;
+        p.pieceEnd = 0;
 
 	//printmsg((char *) &p, PACKET_SIZE(p));
 
-	flood3((char *) &p, PACKET_SIZE(p), 0, 0);
+        flood3((char *) &p, PACKET_SIZE(p), 0, 0);
+        
 }
 
 /*  up_to_network() IS CALLED FROM THE DATA LINK LAYER (BELOW) TO ACCEPT
@@ -124,35 +183,48 @@ static EVENT_HANDLER( down_to_network) {
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	NL_PACKET *p = (NL_PACKET *) packet;
 
-	//printf("up to network\n");
+	printf("up to network\n");
 	++p->hopcount; /* took 1 hop to get here */
 	//printf("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
-	/*  IS THIS PACKET IS FOR ME? */
+        /*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
-		//printf("it's for me!\n========");
+		printf("it's for me!\n========");
 		switch (p->kind) {
 		case NL_DATA:
 			if (p->seqno == NL_packetexpected(p->src)) {
-				CnetAddr tmpaddr;
+                            
+                                printf("piece for this node arrives\n");
+                                length = p->length;
+                                memcpy(rb[p->src], (char *) p->msg, length);
+                                rb[p->src] = rb[p->src] + length;
+				
+                                if(p->pieceEnd) {
+                                    printf("last piece for this node arrives\n");
+                                    CnetAddr tmpaddr;
 
-				length = p->length;
-				//printf("length=%d\n", length);
-				//printf("before up to network packet = %s\n", (char *) p);
-				CHECK(CNET_write_application(p->msg, &length));
-				inc_NL_packetexpected(p->src);
+                                    length = p->pieceNumber * linkinfo[arrived_on_link].mtu + p->length;
+                                    printf("length write_application %d\n", length);
+//                                     printf("before up to network packet = %s\n", (char *) p);
+                                    
+                                    CHECK(CNET_write_application(receiveBuffer[p->src], &length));
+                                    rb[p->src] = &receiveBuffer[p->src][0];
+                                    
+                                    inc_NL_packetexpected(p->src);
 
-				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                    NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 
-				tmpaddr = p->src; /* swap src and dest addresses */
-				p->src = p->dest;
-				p->dest = tmpaddr;
+                                    tmpaddr = p->src; /* swap src and dest addresses */
+                                    p->src = p->dest;
+                                    p->dest = tmpaddr;
 
-				p->kind = NL_ACK;
-				p->hopcount = 0;
-				p->length = 0;
-				//printf("right frame! up to app\n");
-				flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
-				//printf("send ack\n");
+                                    p->kind = NL_ACK;
+                                    p->hopcount = 0;
+                                    p->length = 0;
+                                    //printf("right frame! up to app\n");
+                                    flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
+                                    //printf("send ack\n");
+
+                                }
 			}
 			break;
 
@@ -171,17 +243,29 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	}
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
-		//printf("hopcount = %d\n", p->hopcount);
-		//printf("MAXHOPS = %d\n", MAXHOPS);
+		printf("hopcount = %d\n", p->hopcount);
+		printf("MAXHOPS = %d\n", MAXHOPS);
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
 			//printf("other's frame!\n");
-			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-			/* retransmit on best links *except* the one on which it arrived */
-			//if (CNET_carrier_sense(arrived_on_link) == 0)
-			flood3(packet, length, 0, arrived_on_link);
+                        if(p->pieceEnd){
+                            printf("last piece for another node arrives\n");
+                            length = p->pieceNumber * linkinfo[arrived_on_link].mtu + p->length;
+                        
+                            NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                            flood3(packet, length, 0, arrived_on_link);
+                            rb[p->src] = &receiveBuffer[p->src][0];
+                            
+                        }
+                        else{
+                            printf("piece for another node arrives\n");
+                            length = p->length;
+                            memcpy(rb[p->src], (char *) p->msg, length);
+                            rb[p->src] = rb[p->src] + length;
+                        }
+			
 		} else
 
-			//printf("drop\n");
+			printf("drop\n");
 		/* silently drop */;
 	}
 	return (0);
@@ -194,6 +278,10 @@ EVENT_HANDLER( reboot_node) {
 		fprintf(stderr, "flood3 flooding will not work here\n");
 		exit(1);
 	}
+	
+	for(int i = 0; i<=255; i++){
+            rb[i] = receiveBuffer[i];
+        }
 
 	reboot_DLL();
 	reboot_NL_table();
