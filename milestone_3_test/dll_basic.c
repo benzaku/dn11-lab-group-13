@@ -46,7 +46,6 @@ static struct elemType temp;
 int down_to_datalink(int link, char *packet, size_t length) {
 
         printf("down_to_datalink\n");
-        printf("length down_to_datalink %d\n", length);
 	extern void printmsg(char *, size_t);
 
         
@@ -83,7 +82,6 @@ static EVENT_HANDLER( up_to_datalink) {
 	CHECK(CNET_read_physical(&link, (char *) &f, &length));
 	//printf("DLL frame : %s\n", (char *) &f);
 // 	printmsg((char*) &f, length);
-        printf("length up_to_datalink %d\n", length);
 	CHECK(up_to_network(f.packet, length, link));
 }
 
@@ -101,7 +99,6 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 					/ linkinfo[temp.link].bandwidth;
 			lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
 			size_t len = temp.length;
-                        printf("length timeouts %d\n", len);
 			CHECK(CNET_write_physical_reliable(temp.link, temp.packet, &len));
                         printf("write_physical\n");
 			//(temp.packet, len);

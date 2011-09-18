@@ -38,7 +38,7 @@ typedef struct {
 	NL_PACKETKIND kind; /* only ever NL_DATA or NL_ACK */
 	int seqno; /* 0, 1, 2, ... */
 	int hopcount;
-        int checksum;
+//         int checksum;
         size_t pieceNumber;
         int pieceEnd;
 	size_t length; /* the length of the msg portion only */
@@ -66,9 +66,14 @@ void printmsg(char * msg, size_t length) {
 void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link){
                 printf("sendPacketPiecesToDatalink\n");
     
+                printf("linkinfo[choose_link] %d\n", linkinfo[choose_link].mtu);
                 size_t maxPacketLength = linkinfo[choose_link].mtu - PACKET_HEADER_SIZE;
                 
                 NL_PACKET *tempPacket = (NL_PACKET *) packet;
+                
+                size_t tempLength = length;
+                char *str = tempPacket->msg;
+                
                 NL_PACKET piecePacket;
                 
                 piecePacket.src         = tempPacket->src;
@@ -76,28 +81,32 @@ void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link){
                 piecePacket.kind        = tempPacket->kind;
                 piecePacket.seqno       = tempPacket->seqno;
                 piecePacket.hopcount    = tempPacket->hopcount;
-                piecePacket.pieceNumber = tempPacket->pieceNumber;
                 piecePacket.pieceEnd    = tempPacket->pieceEnd;
+                piecePacket.pieceNumber = tempPacket->pieceNumber;
+
                 
-                size_t tempLength = length;
-                char *str = tempPacket->msg;
-                                                
                 while(tempLength > maxPacketLength){
+                    
                     piecePacket.length = maxPacketLength;
                     memcpy(piecePacket.msg, str, maxPacketLength);
             
                     CHECK(down_to_datalink(choose_link, (char *) &piecePacket, PACKET_SIZE(piecePacket)));
+                    printf("piece %d down_to_datalink\n", piecePacket.pieceNumber);
+                    
+                    str = str + maxPacketLength;
                     piecePacket.pieceNumber = piecePacket.pieceNumber + 1;
-                    str = str + piecePacket.pieceNumber * maxPacketLength;
-                    tempLength = tempLength - piecePacket.pieceNumber * maxPacketLength;
+
+                    tempLength = tempLength - maxPacketLength;
                 }
+                
                 
                 piecePacket.pieceEnd = 1;
                 piecePacket.length = tempLength;
+    
                 memcpy(piecePacket.msg, str, tempLength);
                 //printf("Required link is provided link = %d\n", choose_link);
-                printf("sendPacketPiecesToDatalink %d\n", length);
                 CHECK(down_to_datalink(choose_link, (char *) &piecePacket, PACKET_SIZE(piecePacket)));
+                printf("last piece %d down_to_datalink\n", piecePacket.pieceNumber);
                 //printf("Provided link = %d sent! \n", choose_link);
 }
 
@@ -110,7 +119,6 @@ void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link){
 static void flood3(char *packet, size_t length, int choose_link, int avoid_link) {
     
         printf("flood3\n");
-        printf("flood3 %d\n", length);
         NL_PACKET *p = (NL_PACKET *) packet;
  
 	/*  REQUIRED LINK IS PROVIDED - USE IT */
@@ -170,9 +178,18 @@ static EVENT_HANDLER( down_to_network) {
 	p.seqno = NL_nextpackettosend(p.dest);
         p.pieceNumber = 0;
         p.pieceEnd = 0;
+        
 
-	//printmsg((char *) &p, PACKET_SIZE(p));
+//  	printmsg((char *) &p, PACKET_SIZE(p));
 
+//         strcpy(p.msg, "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+//         p.length = strlen(p.msg);
+//         printf("contents of the whole generated msg is\n %s\n", p.msg);
+
+
+
+
+        printf("length generated %d\n", p.length);
         flood3((char *) &p, PACKET_SIZE(p), 0, 0);
         
 }
@@ -188,24 +205,30 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	//printf("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
         /*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
-		printf("it's for me!\n========");
 		switch (p->kind) {
 		case NL_DATA:
 			if (p->seqno == NL_packetexpected(p->src)) {
                             
-                                printf("piece for this node arrives\n");
+                                printf("piece %d for this node arrives\n", p->pieceNumber);
                                 length = p->length;
                                 memcpy(rb[p->src], (char *) p->msg, length);
                                 rb[p->src] = rb[p->src] + length;
 				
                                 if(p->pieceEnd) {
-                                    printf("last piece for this node arrives\n");
+                                    printf("last piece %d for this node arrives\n", p->pieceNumber);
                                     CnetAddr tmpaddr;
+                                    
+                                    
+                                    printf("1. Parameter %d\n", p->pieceNumber);
+                                    printf("2. Parameter %d\n", linkinfo[arrived_on_link].mtu);
+                                    printf("3. Parameter %d\n", p->length);
+                                    
 
-                                    length = p->pieceNumber * linkinfo[arrived_on_link].mtu + p->length;
+                                    length = p->pieceNumber * (linkinfo[arrived_on_link].mtu - PACKET_HEADER_SIZE) + p->length;
                                     printf("length write_application %d\n", length);
 //                                     printf("before up to network packet = %s\n", (char *) p);
                                     
+//                                     printf("contents of msg write_application is \n %s\n", receiveBuffer[p->src]);
                                     CHECK(CNET_write_application(receiveBuffer[p->src], &length));
                                     rb[p->src] = &receiveBuffer[p->src][0];
                                     
@@ -243,25 +266,42 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	}
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
-		printf("hopcount = %d\n", p->hopcount);
-		printf("MAXHOPS = %d\n", MAXHOPS);
+// 		printf("hopcount = %d\n", p->hopcount);
+// 		printf("MAXHOPS = %d\n", MAXHOPS);
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
 			//printf("other's frame!\n");
+                        
+                        printf("piece for another node arrives\n");
+                        length = p->length;
+                        memcpy(rb[p->src], (char *) p->msg, length);
+                        rb[p->src] = rb[p->src] + length;
+                            
                         if(p->pieceEnd){
                             printf("last piece for another node arrives\n");
-                            length = p->pieceNumber * linkinfo[arrived_on_link].mtu + p->length;
+                            length = p->pieceNumber * (linkinfo[arrived_on_link].mtu - PACKET_HEADER_SIZE) + p->length;
                         
                             NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-                            flood3(packet, length, 0, arrived_on_link);
+                            
+                            
+                            NL_PACKET wholePacket;
+                
+                            wholePacket.src         = p->src;
+                            wholePacket.dest        = p->dest;
+                            wholePacket.kind        = p->kind;
+                            wholePacket.seqno       = p->seqno;
+                            wholePacket.hopcount    = p->hopcount;
+                            wholePacket.pieceEnd    = 0;
+                            wholePacket.pieceNumber = 0;
+                            wholePacket.length      = length;
+                            
+                            memcpy(wholePacket.msg, receiveBuffer[p->src], length);
+                    
+//                             printf("contents of msg forwarding is \n %s\n", receiveBuffer[p->src]);
+                            flood3((char *) &wholePacket, PACKET_SIZE(wholePacket), 0, arrived_on_link);
                             rb[p->src] = &receiveBuffer[p->src][0];
                             
                         }
-                        else{
-                            printf("piece for another node arrives\n");
-                            length = p->length;
-                            memcpy(rb[p->src], (char *) p->msg, length);
-                            rb[p->src] = rb[p->src] + length;
-                        }
+                        
 			
 		} else
 
@@ -275,7 +315,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 EVENT_HANDLER( reboot_node) {
 	if (nodeinfo.nlinks > 32) {
-		fprintf(stderr, "flood3 flooding will not work here\n");
+// 		fprintf(stderr, "flood3 flooding will not work here\n");
 		exit(1);
 	}
 	
