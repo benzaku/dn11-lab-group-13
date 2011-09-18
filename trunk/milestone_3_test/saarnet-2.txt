@@ -8,13 +8,16 @@ compile = "flooding3.c dll_basic.c nl_table.c queue.c"
 //#include "linktypes.txt"
 buffered = false
 wan-jitter = 0usec
+#define LINK_LOW_MTU(bw, pd)  probframecorrupt = 0  probframeloss = 0  mtu = 96bytes  bandwidth = bw Mbps  costperframe = bw  propagationdelay = pd usecs
+
+#define LINK_GOOD(bw, pd)     probframecorrupt = 8  probframeloss = 9  mtu = 16384bytes  bandwidth = bw Mbps  costperframe = bw  propagationdelay = pd usecs
 
 host SB {
 	x = 45388, y = 44424
 	address = 134
 	messagerate = 1ms
 	
-	wan to HOM //{ LINK_LOW_MTU(1, 3450) }
+	wan to HOM { LINK_GOOD(10, 2622) }
 }
 
 host HOM {
@@ -22,5 +25,5 @@ host HOM {
 	address = 96
 	messagerate = 500ms
 
-	wan to SB //{ LINK_LOW_MTU(1, 3450) }
+	wan to SB { LINK_GOOD(10, 2622) }
 }
