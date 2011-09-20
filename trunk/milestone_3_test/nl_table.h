@@ -1,3 +1,6 @@
+#ifndef _NL_TABLE_H_
+#define _NL_TABLE_H_
+
 #include <cnet.h>
 
 #define	ALL_LINKS	(-1)
@@ -13,3 +16,5 @@ extern	void	inc_NL_ackexpected(CnetAddr address);
 
 extern	int	NL_linksofminhops(CnetAddr address);
 extern	void	NL_savehopcount(CnetAddr address, int hops, int link);
+
+#endif
