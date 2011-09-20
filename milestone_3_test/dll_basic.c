@@ -67,7 +67,7 @@ int down_to_datalink(int link, char *packet, size_t length) {
  KNOWING THAT OUR PHYSICAL LAYER IS RELIABLE, IMMEDIATELY SENDS THE
  PAYLOAD (A PACKET) UP TO THE NETWORK LAYER.
  */
-static EVENT_HANDLER( up_to_datalink) {
+static EVENT_HANDLER(up_to_datalink) {
         printf("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
 	extern void printmsg(char *, size_t);
@@ -86,7 +86,7 @@ static EVENT_HANDLER( up_to_datalink) {
 }
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
-        printf("timeouts\n");
+        //printf("timeouts\n");
 	extern void printmsg(char *, size_t);
 	CnetTime timeout;
 	if (timer == lasttimer) {
@@ -100,7 +100,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
 			size_t len = temp.length;
 			CHECK(CNET_write_physical_reliable(temp.link, temp.packet, &len));
-                        printf("write_physical\n");
+                        //printf("write_physical\n");
 			//(temp.packet, len);
 
 			outQueue(&buf);

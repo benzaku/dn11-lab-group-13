@@ -1,3 +1,6 @@
+#ifndef _DLL_BASIC_H_
+#define _DLL_BASIC_H_
+
 #include <cnet.h>
 
 /* ------- DECLARATIONS FOR A MINIMAL RELIABLE DATALINK LAYER -------- */
@@ -8,3 +11,5 @@ extern	void	reboot_DLL(void);
 extern void inc_semphore();
 extern int get_semphore();
 extern void dec_semphore();
+
+#endif
