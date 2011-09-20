@@ -7,7 +7,7 @@
 #include "nl_table.c"
 #include "dll_basic.c"
 
-#define	MAXHOPS		9
+#define	MAXHOPS		4
 
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
