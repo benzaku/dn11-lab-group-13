@@ -7,7 +7,7 @@
 #include "nl_table.c"
 #include "dll_basic.c"
 
-#define	MAXHOPS		4
+#define	MAXHOPS		9
 
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
@@ -230,7 +230,14 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 //                                     printf("before up to network packet = %s\n", (char *) p);
                                     
 //                                     printf("contents of msg write_application is \n %s\n", receiveBuffer[p->src]);
-                                    CHECK(CNET_write_application(receiveBuffer[p->src], &length));
+                                    //CHECK(CNET_write_application(receiveBuffer[p->src], &length));
+				    if(CNET_write_application(receiveBuffer[p->src], &length) == -1){
+				      if(cnet_errno == ER_CORRUPTFRAME){
+				        //source node should send this msg again
+				        printf("\nWarning: corrupt frame\n\n");
+				      }
+				    }
+				    
                                     rb[p->src] = &receiveBuffer[p->src][0];
                                     
                                     inc_NL_packetexpected(p->src);
