@@ -31,10 +31,11 @@ static int find_address(CnetAddr address) {
 			return t;
 
 	//  UNNOWN ADDRESS, SO WE MUST CREATE AND INITIALIZE A NEW ENTRY
-	if(NL_table_size == NL_table_capacity){
-	  NL_table = realloc(NL_table, (NL_table_size + NL_table_increment) * sizeof(NLTABLE));
-	  memset(&NL_table[NL_table_size], NL_table_increment, sizeof(NLTABLE));
-	  NL_table_capacity += NL_table_increment;
+	if (NL_table_size == NL_table_capacity - 1) {
+		NL_table = realloc(NL_table, (NL_table_size + NL_table_increment)
+				* sizeof(NLTABLE));
+		memset(&NL_table[NL_table_size], NL_table_increment, sizeof(NLTABLE));
+		NL_table_capacity += NL_table_increment;
 	}
 	NL_table[NL_table_size].address = address;
 	NL_table[NL_table_size].minhops = INT_MAX;
