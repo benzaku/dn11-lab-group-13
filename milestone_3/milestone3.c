@@ -232,9 +232,11 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 //                                     printf("contents of msg write_application is \n %s\n", receiveBuffer[p->src]);
                                     //CHECK(CNET_write_application(receiveBuffer[p->src], &length));
 				    if(CNET_write_application(receiveBuffer[p->src], &length) == -1){
+				      //source node should send this msg again
 				      if(cnet_errno == ER_CORRUPTFRAME){
-				        //source node should send this msg again
-				        printf("\nWarning: corrupt frame\n\n");
+				        printf("\nWarning: frame corrupted\n\n");
+				      } else if(cnet_errno == ER_MISSINGMSG){
+				        printf("\nWarning: frame missed\n\n");
 				      }
 				    }
 				    
