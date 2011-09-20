@@ -67,7 +67,7 @@ int down_to_datalink(int link, char *packet, size_t length) {
  KNOWING THAT OUR PHYSICAL LAYER IS RELIABLE, IMMEDIATELY SENDS THE
  PAYLOAD (A PACKET) UP TO THE NETWORK LAYER.
  */
-static EVENT_HANDLER( up_to_datalink) {
+static EVENT_HANDLER(up_to_datalink) {
         printf("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
 	extern void printmsg(char *, size_t);
