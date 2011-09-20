@@ -41,6 +41,7 @@ struct elemType outQueue(struct queueLK *hq) {
 		hq->rear = NULL;
 	}
 	free(temp.packet);
+	free(p);
 	hq->size--;
 	return temp;
 }
