@@ -12,13 +12,14 @@ typedef struct {
 	int ackexpected; // packet sequence numbers to/from node
 	int nextpackettosend;
 	int packetexpected;
-
 	int minhops; // minimum known hops to remote node
 	int minhop_link; // link via which minhops path observed
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
 static int NL_table_size = 0;
+static int NL_table_capacity = 0;
+static int NL_table_increment = 5;
 
 // -----------------------------------------------------------------
 
@@ -30,8 +31,11 @@ static int find_address(CnetAddr address) {
 			return t;
 
 	//  UNNOWN ADDRESS, SO WE MUST CREATE AND INITIALIZE A NEW ENTRY
-	NL_table = realloc(NL_table, (NL_table_size + 1) * sizeof(NLTABLE));
-	memset(&NL_table[NL_table_size], 0, sizeof(NLTABLE));
+	if(NL_table_size == NL_table_capacity){
+	  NL_table = realloc(NL_table, (NL_table_size + NL_table_increment) * sizeof(NLTABLE));
+	  memset(&NL_table[NL_table_size], NL_table_increment, sizeof(NLTABLE));
+	  NL_table_capacity += NL_table_increment;
+	}
 	NL_table[NL_table_size].address = address;
 	NL_table[NL_table_size].minhops = INT_MAX;
 	return NL_table_size++;
@@ -110,6 +114,7 @@ void reboot_NL_table(void) {
 	CHECK(CNET_set_handler(EV_DEBUG0, show_NL_table, 0));
 	CHECK(CNET_set_debug_string(EV_DEBUG0, "NL info"));
 
-	NL_table = calloc(1, sizeof(NLTABLE));
+	NL_table = calloc(NL_table_increment, sizeof(NLTABLE));
+	NL_table_capacity = NL_table_increment;
 	NL_table_size = 0;
 }
