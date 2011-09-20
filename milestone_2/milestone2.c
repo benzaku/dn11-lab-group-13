@@ -20,8 +20,8 @@ typedef struct
     MSG         msg;
 } FRAME;
 
-#define FRAME_HEADER_SIZE  (sizeof(FRAME) - sizeof(MSG))
-#define FRAME_SIZE(f)      (FRAME_HEADER_SIZE + f.len)
+//#define FRAME_HEADER_SIZE  (sizeof(FRAME) - sizeof(MSG))
+//#define FRAME_SIZE(f)      (FRAME_HEADER_SIZE + f.len)
 #define CN_RED                          "red"
 
 static  MSG             *lastmsg;
@@ -35,7 +35,7 @@ static char receiveBuffer[MAX_MESSAGE_SIZE];
 static size_t lengthOfReceiveBuffer = 0;
 static int nextmsgtosend = 1;
 static char *n = receiveBuffer;
-
+static int frame_header_size;
 
 /*
  *      function to handle frame transmition
@@ -51,7 +51,7 @@ static void transmit_frame(MSG *msg,
 
     f.seq       = seqno;
    // f.checksum  = 0;
-    f.len       = linkinfo[link].mtu - FRAME_HEADER_SIZE;
+    f.len       = linkinfo[link].mtu - frame_header_size;
     f.frameEnd  = 0;
     CnetTime   timeout;
 
@@ -77,13 +77,13 @@ static void transmit_frame(MSG *msg,
                 nextframetosend++;
             }
         
-            timeout = FRAME_SIZE(f) * (CnetTime)8000000 / linkinfo[link].bandwidth;
+            timeout = (frame_header_size+f.len) * (CnetTime)8000000 / linkinfo[link].bandwidth;
 //             timeout = linkinfo[link].propagationdelay;
             lasttimer = CNET_start_timer(EV_TIMER1, 1.002 * timeout, 0);
              
     
     
-    length = FRAME_SIZE(f);
+    length = frame_header_size+f.len;
     CHECK(CNET_write_physical(link, (char *)&f, &length));
   
 }
@@ -180,7 +180,7 @@ void reboot_node(CnetEvent ev, CnetTimerID timer, CnetData data)
     }
 
     lastmsg     = malloc(sizeof(MSG));
-
+    frame_header_size = sizeof(FRAME) - sizeof(MSG);
     CHECK(CNET_set_handler( EV_APPLICATIONREADY, application_ready, 0));
     CHECK(CNET_set_handler( EV_PHYSICALREADY,    physical_ready, 0));
     CHECK(CNET_set_handler( EV_TIMER1,           timeouts, 0));
