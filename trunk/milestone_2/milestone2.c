@@ -86,7 +86,7 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
         
             timeout = FRAME_SIZE(f) * (CnetTime)8000000 / linkinfo[link].bandwidth;
 //             timeout = linkinfo[link].propagationdelay;
-            lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
+            lasttimer = CNET_start_timer(EV_TIMER1, 1.002 * timeout, 0);
             break;  
     }
     
@@ -102,24 +102,23 @@ static void transmit_frame(MSG *msg, FRAMEKIND kind,
 static void application_ready(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
 //     printf("we are in application_ready\n");
-    if (nextmsgtosend){
-        CnetAddr destaddr;
-        
-        lastlength  = sizeof(MSG); // lastlength = 10240
-        CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
-        CHECK(CNET_disable_application(ALLNODES));
-        nextmsgtosend = 0;
-        nextframetosend = 0;
+
+    CnetAddr destaddr;
+    
+    lastlength  = sizeof(MSG); // lastlength = 10240
+    CHECK(CNET_read_application(&destaddr, (char *)lastmsg, &lastlength));
+    CHECK(CNET_disable_application(ALLNODES));
+    nextmsgtosend = 0;
+    nextframetosend = 0;
+    transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
         
 //         strcpy((char *)lastmsg, "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
 //         lastlength = strlen((char *)lastmsg);
-    }
-    
-    CHECK(CNET_disable_application(ALLNODES));
+
     
 //     printf("contents of the whole generated msg\n %s\n", (char *)lastmsg);
 //     printf("length of the whole generated msg %d\n", lastlength);
-    transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
+
 }
 
 
@@ -203,8 +202,14 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data)
 {
     if(timer == lasttimer)
     {
-        CHECK(CNET_enable_application(ALLNODES));
+        if (nextmsgtosend) CHECK(CNET_enable_application(ALLNODES));
+        else transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
     }
+
+//     if (nextmsgtosend){
+//         CHECK(CNET_enable_application(ALLNODES));
+//     }
+//     else transmit_frame(lastmsg, DL_DATA, lastlength, nextframetosend);
 }
 
 
