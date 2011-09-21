@@ -246,8 +246,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				rb[p->src] = rb[p->src] + length;
 				
 				/* debug: routing test */
-				if ((p->src == 170 && p->dest == 134) || (p->src = 134 && p->dest == 170))
-				  printf("This piece traveled %d hops\n", p->traveled_hops_count);
+				//if ((p->src == 170 && p->dest == 134) || (p->src = 134 && p->dest == 170))
+				  //printf("This piece traveled %d hops\n", p->traveled_hops_count);
 
 				if (p->pieceEnd) {
 					//printf("last piece %d for this node arrives\n",p->pieceNumber);
