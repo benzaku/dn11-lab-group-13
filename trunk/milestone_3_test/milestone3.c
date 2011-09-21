@@ -56,6 +56,7 @@ static char receiveBuffer[255][MAX_MESSAGE_SIZE];
 static char *rb[255];
 static int is_traveled_hop;
 static int i;
+static int mtu;
 
 void printmsg(char * msg, size_t length) {
 	size_t i;
@@ -206,12 +207,12 @@ static EVENT_HANDLER(down_to_network) {
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
+	printf("up to network at hop %s \n", nodeinfo.nodename);
 	NL_PACKET *p = (NL_PACKET *) packet;
 	
 	//if(p->traveled_hops_count < 1 || p->traveled_hops_count > MAXHOPS)
 	  //return 0;
-
-	//printf("up to network\n");
+	
 	//++p->hopcount; /* took 1 hop to get here */
 	if(p->traveled_hops_count > 0 && p->traveled_hops_count<= MAXHOPS){
 	is_traveled_hop = 0;
@@ -225,10 +226,13 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	  printf("seqno %d    pieceNumber %d   src %d    des %d    current_hop %d\n", p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
 	  printf("p->traveled_hops_count %d\n", p->traveled_hops_count);
 	  p->traveled_hops[p->traveled_hops_count++] = nodeinfo.nodenumber;
-	  p->trans_time += linkinfo[arrived_on_link].mtu*(CnetTime) 8000000 / linkinfo[arrived_on_link].bandwidth;
+	  mtu = linkinfo[arrived_on_link].mtu;
+	 // p->trans_time += ((CnetTime)8000000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)/mtu;
+	  p->trans_time += linkinfo[arrived_on_link].costperframe;
 	}
 	else printf("seqno %d    pieceNumber %d    src %d    des %d    current_hop %d. This hop has been traveled\n",  p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
 	}
+					
 	//printf("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
@@ -240,6 +244,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				length = p->length;
 				memcpy(rb[p->src], (char *) p->msg, length);
 				rb[p->src] = rb[p->src] + length;
+				
+				/* debug: routing test */
+				if ((p->src == 170 && p->dest == 134) || (p->src = 134 && p->dest == 170))
+				  printf("This piece traveled %d hops\n", p->traveled_hops_count);
 
 				if (p->pieceEnd) {
 					//printf("last piece %d for this node arrives\n",p->pieceNumber);

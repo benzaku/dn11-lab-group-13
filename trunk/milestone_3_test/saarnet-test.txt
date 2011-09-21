@@ -1,0 +1,51 @@
+compile = "milestone3.c"
+
+#include "saarland.map"
+#include "linktypes.txt"
+
+host SB {
+	x = 45388, y = 44424
+	address = 134
+	messagerate = 10ms // ~ 1.6 Mbps
+
+	wan to IGB { LINK_GOOD(10, 1584) }
+	wan to NK  { LINK_WORST(1, 5000) }
+	wan to SLS { LINK_GOOD(30, 800) }
+}
+
+host IGB {
+	x = 55656, y = 39744
+	address = 185
+	messagerate = 20ms // ~ 0.8 Mbps
+
+	wan to SB { LINK_GOOD(10, 1584) }
+	wan to HOM { LINK_GOOD(10, 1888) }
+}
+
+host HOM {
+	x = 68544, y = 35424
+	address = 96
+	messagerate = 20ms // ~ 0.8 Mbps
+
+	wan to IGB { LINK_GOOD(10, 1888) }
+	wan to NK { LINK_STD(5, 1518) }
+}
+
+host NK {
+	x = 58176, y = 31896
+	address = 170
+	messagerate = 20ms // ~ 0.8 Mbps
+
+	wan to HOM { LINK_STD(5, 1518) }
+	wan to SLS { LINK_GOOD(30, 800) }
+	wan to SB  { LINK_WORST(1, 5000) }
+}
+
+host SLS {
+	x = 29088, y = 34848
+	address = 182
+	messagerate = 15ms // ~ 1.2 Mbps
+
+	wan to SB { LINK_GOOD(30, 800) }
+	wan to NK { LINK_GOOD(30, 800) }
+}
