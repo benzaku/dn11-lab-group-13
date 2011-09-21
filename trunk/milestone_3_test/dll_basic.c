@@ -45,7 +45,7 @@ struct queueLK buf;
 static struct elemType temp;
 int down_to_datalink(int link, char *packet, size_t length) {
 
-        printf("down_to_datalink\n");
+        //printf("down_to_datalink\n");
 	extern void printmsg(char *, size_t);
 
         
@@ -68,9 +68,9 @@ int down_to_datalink(int link, char *packet, size_t length) {
  PAYLOAD (A PACKET) UP TO THE NETWORK LAYER.
  */
 static EVENT_HANDLER(up_to_datalink) {
-        printf("up_to_datalink\n");
+        //printf("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
-	extern void printmsg(char *, size_t);
+	//extern void printmsg(char *, size_t);
 	
         DLL_FRAME f;
 	size_t length;
@@ -87,7 +87,7 @@ static EVENT_HANDLER(up_to_datalink) {
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
         //printf("timeouts\n");
-	extern void printmsg(char *, size_t);
+	//extern void printmsg(char *, size_t);
 	CnetTime timeout;
 	if (timer == lasttimer) {
 
