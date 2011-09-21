@@ -215,22 +215,29 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	
 	//++p->hopcount; /* took 1 hop to get here */
 	if(p->traveled_hops_count > 0 && p->traveled_hops_count<= MAXHOPS){
-	is_traveled_hop = 0;
-	for(i=0; i<p->traveled_hops_count; ++i){
-	  if(p->traveled_hops[i] == nodeinfo.nodenumber){
-	    is_traveled_hop = 1;
-	    break;
+	  is_traveled_hop = 0;
+	  for(i=0; i<p->traveled_hops_count; ++i){
+	    if(p->traveled_hops[i] == nodeinfo.nodenumber){
+	      is_traveled_hop = 1;
+	      break;
+	    }
 	  }
-	}
-	if(is_traveled_hop != 1){
-	  printf("seqno %d    pieceNumber %d   src %d    des %d    current_hop %d\n", p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
-	  printf("p->traveled_hops_count %d\n", p->traveled_hops_count);
-	  p->traveled_hops[p->traveled_hops_count++] = nodeinfo.nodenumber;
-	  mtu = linkinfo[arrived_on_link].mtu;
-	  p->trans_time += ((CnetTime)8000000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)/mtu;
-	  //p->trans_time += linkinfo[arrived_on_link].costperframe;
-	}
-	else printf("seqno %d    pieceNumber %d    src %d    des %d    current_hop %d. This hop has been traveled\n",  p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
+	  if(is_traveled_hop != 1){
+	    printf("seqno %d    pieceNumber %d   src %d    des %d    current_hop %d\n", p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
+	    printf("p->traveled_hops_count %d\n", p->traveled_hops_count);
+	    p->traveled_hops[p->traveled_hops_count++] = nodeinfo.nodenumber;
+	    mtu = linkinfo[arrived_on_link].mtu;
+	    p->trans_time += ((CnetTime)8000000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)/mtu;
+	    //p->trans_time += linkinfo[arrived_on_link].costperframe;
+	  } else{ 
+	      printf("seqno %d    pieceNumber %d    src %d    des %d    current_hop %d. This hop has been traveled\n",  p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
+	      printf("\n");
+	      /*free(&p->traveled_hops);
+	      free(&p->msg);
+	      free(p);
+	      */
+	      return 0;
+	  }
 	}
 					
 	//printf("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
