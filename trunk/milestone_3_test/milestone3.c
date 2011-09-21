@@ -227,8 +227,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	  printf("p->traveled_hops_count %d\n", p->traveled_hops_count);
 	  p->traveled_hops[p->traveled_hops_count++] = nodeinfo.nodenumber;
 	  mtu = linkinfo[arrived_on_link].mtu;
-	 // p->trans_time += ((CnetTime)8000000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)/mtu;
-	  p->trans_time += linkinfo[arrived_on_link].costperframe;
+	  p->trans_time += ((CnetTime)8000000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)/mtu;
+	  //p->trans_time += linkinfo[arrived_on_link].costperframe;
 	}
 	else printf("seqno %d    pieceNumber %d    src %d    des %d    current_hop %d. This hop has been traveled\n",  p->seqno, p->pieceNumber, p->src, p->dest, nodeinfo.address);
 	}
