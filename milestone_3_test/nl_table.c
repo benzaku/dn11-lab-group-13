@@ -12,8 +12,9 @@ typedef struct {
 	int ackexpected; // packet sequence numbers to/from node
 	int nextpackettosend;
 	int packetexpected;
-	int minhops; // minimum known hops to remote node
+//	int minhops; // minimum known hops to remote node
 	int minhop_link; // link via which minhops path observed
+	float minhop_trans_time;
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
@@ -37,7 +38,8 @@ static int find_address(CnetAddr address) {
 	  NL_table_capacity += NL_table_increment;
 	}
 	NL_table[NL_table_size].address = address;
-	NL_table[NL_table_size].minhops = INT_MAX;
+	//NL_table[NL_table_size].minhops = INT_MAX;
+	NL_table[NL_table_size].minhop_trans_time = INT_MAX;
 	return NL_table_size++;
 }
 
@@ -79,14 +81,19 @@ int NL_linksofminhops(CnetAddr address) {
 
 static bool given_stats = false;
 
-void NL_savehopcount(CnetAddr address, int hops, int link) {
+void NL_savehopcount(CnetAddr address, int trans_time, int link) {
 	int t = find_address(address);
-
+	if (NL_table[t].minhop_trans_time > trans_time) {
+		NL_table[t].minhop_trans_time = trans_time;
+		NL_table[t].minhop_link = link;
+		given_stats = true;
+	}
+	/*
 	if (NL_table[t].minhops > hops) {
 		NL_table[t].minhops = hops;
 		NL_table[t].minhop_link = link;
 		given_stats = true;
-	}
+	}*/
 }
 
 // -----------------------------------------------------------------
@@ -96,7 +103,8 @@ static EVENT_HANDLER( show_NL_table) {
 	printf("\n%12s %12s %12s %12s", "destination", "ackexpected",
 			"nextpkttosend", "pktexpected");
 	if (given_stats)
-		printf(" %8s %8s", "minhops", "bestlink");
+		//printf(" %8s %8s", "minhops", "bestlink");
+		  printf(" %8s %8s", "minhop_trans_time", "bestlink");
 	printf("\n");
 
 	for (int t = 0; t < NL_table_size; ++t)
@@ -105,7 +113,8 @@ static EVENT_HANDLER( show_NL_table) {
 					NL_table[t].ackexpected, NL_table[t].nextpackettosend,
 					NL_table[t].packetexpected);
 			if (NL_table[t].minhop_link != 0)
-				printf(" %8d %8d", NL_table[t].minhops, NL_table[t].minhop_link);
+				//printf(" %8d %8d", NL_table[t].minhops, NL_table[t].minhop_link);
+				  printf(" %8d %8d", NL_table[t].minhop_trans_time, NL_table[t].minhop_link);
 			printf("\n");
 		}
 }
