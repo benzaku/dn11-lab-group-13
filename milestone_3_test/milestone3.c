@@ -329,6 +329,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				wholePacket.seqno = p->seqno;
 				//wholePacket.hopcount = p->hopcount;
 				wholePacket.trans_time = p->trans_time;
+				wholePacket.traveled_hops_count = p->traveled_hops_count;
+				memcpy(wholePacket.traveled_hops,p->traveled_hops, MAXHOPS);
 				wholePacket.pieceEnd = 0;
 				wholePacket.pieceNumber = 0;
 				wholePacket.length = length;
