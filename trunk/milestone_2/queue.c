@@ -32,6 +32,7 @@ void outQueue(struct queueLK *hq) {
 		exit(1);
 	}
 	p = hq->front;
+	
 	hq->front = p->next;
 	if (hq->front == NULL) {
 		hq->rear = NULL;

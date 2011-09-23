@@ -52,8 +52,9 @@ typedef struct {
 #define PACKET_HEADER_SIZE  (sizeof(NL_PACKET) - MAX_MESSAGE_SIZE)
 #define PACKET_SIZE(p)	    (PACKET_HEADER_SIZE + p.length)
 
-static char receiveBuffer[255][MAX_MESSAGE_SIZE];
-static char *rb[255];
+static char receiveBuffer[256][MAX_MESSAGE_SIZE];
+static char *rb[256];
+static size_t  packet_length[256];
 static int is_traveled_hop;
 static int i;
 static int mtu;
@@ -251,6 +252,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				length = p->length;
 				memcpy(rb[p->src], (char *) p->msg, length);
 				rb[p->src] = rb[p->src] + length;
+				packet_length[p->src] += length;
 				
 				/* debug: routing test */
 				//if ((p->src == 170 && p->dest == 134) || (p->src = 134 && p->dest == 170))
@@ -263,25 +265,58 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					//printf("1. Parameter %d\n", p->pieceNumber);
 					//printf("2. Parameter %d\n", linkinfo[arrived_on_link].mtu);
 					//printf("3. Parameter %d\n", p->length);
-
+					
 					length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
 							- PACKET_HEADER_SIZE) + p->length;
+					if(length != packet_length[p->src])
+					  printf("length not euqal");
 					//printf("length write_application %d\n", length);
 					//                                     printf("before up to network packet = %s\n", (char *) p);
 
 					//                                     printf("contents of msg write_application is \n %s\n", receiveBuffer[p->src]);
 					//CHECK(CNET_write_application(receiveBuffer[p->src], &length));
-					if (CNET_write_application(receiveBuffer[p->src], &length)
-							== -1) {
+					if (CNET_write_application(receiveBuffer[p->src], &packet_length[p->src]) == -1) {
 						//source node should send this msg again
 						if (cnet_errno == ER_CORRUPTFRAME) {
 							printf("Warning: host %d received a corrupt packet from %d\n", nodeinfo.address, p->src);
+							printf("src_packet_length %d    des_packet_length %d", length, packet_length[p->src]);
 						} else if (cnet_errno == ER_MISSINGMSG) {
+							printf("Warning: host %d received a unordered packet from %d\n", nodeinfo.address, p->src);
+							printf("src_packet_length %d    des_packet_length %d", length, packet_length[p->src]);
+							/*
+							tmpaddr = p->src;
+							p->src = p->dest;
+							p->dest = tmpaddr;
+							p->kind = NL_ACK;
+							//p->hopcount = 0;
+							p->traveled_hops_count = 0;
+							memset(p->traveled_hops, -1, MAXHOPS*sizeof(int));
+							p->trans_time = 0;
+							p->length = 0;
+							//printf("right frame! up to app\n");
+							flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
+							*/
+						}else if (cnet_errno == ER_BADSIZE){
 							printf("Warning: host %d received a loss packet from %d\n", nodeinfo.address, p->src);
+							printf("src_packet_length %d    des_packet_length %d", length, packet_length[p->src]);
+							/*
+							tmpaddr = p->src;
+							p->src = p->dest;
+							p->dest = tmpaddr;
+							p->kind = NL_ACK;
+							//p->hopcount = 0;
+							p->traveled_hops_count = 0;
+							memset(p->traveled_hops, -1, MAXHOPS*sizeof(int));
+							p->trans_time = 0;
+							p->length = 0;
+							//printf("right frame! up to app\n");
+							flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
+							*/
 						}
 					} else printf("host %d received a correct packet\n", nodeinfo.address);
 
 					rb[p->src] = &receiveBuffer[p->src][0];
+					packet_length[p->src] = 0;
 
 					inc_NL_packetexpected(p->src);
 
@@ -299,7 +334,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					//printf("right frame! up to app\n");
 					flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
 					//printf("send ack\n");
-
 				}
 			}
 			break;
@@ -328,12 +362,13 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			length = p->length;
 			memcpy(rb[p->src], (char *) p->msg, length);
 			rb[p->src] = rb[p->src] + length;
+			packet_length[p->src] += length;
 
 			if (p->pieceEnd) {
 				//printf("last piece for another node arrives\n");
-				length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-						- PACKET_HEADER_SIZE) + p->length;
-
+				//length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
+				//		- PACKET_HEADER_SIZE) + p->length;
+				length = packet_length[p->src];
 				//NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 				NL_PACKET wholePacket;
@@ -377,6 +412,7 @@ EVENT_HANDLER( reboot_node) {
 
 	for (int i = 0; i <= 255; i++) {
 		rb[i] = receiveBuffer[i];
+		packet_length[i] = 0;
 	}
 
 	reboot_DLL();

@@ -98,7 +98,7 @@ void NL_savehopcount(CnetAddr address, int trans_time, int link) {
 
 // -----------------------------------------------------------------
 
-static EVENT_HANDLER( show_NL_table) {
+static EVENT_HANDLER(show_NL_table) {
 	CNET_clear();
 	printf("\n%12s %12s %12s %12s", "destination", "ackexpected",
 			"nextpkttosend", "pktexpected");
