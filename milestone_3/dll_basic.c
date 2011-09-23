@@ -26,7 +26,7 @@ typedef struct {
 
 int compare(char * str1, size_t len1, char * str2, size_t len2) {
 	if (len1 != len2) {
-		printf("different length");
+		//("different length");
 		return 0;
 	}
 	int i;
@@ -45,7 +45,7 @@ struct queueLK buf;
 static struct elemType temp;
 int down_to_datalink(int link, char *packet, size_t length) {
 
-        printf("down_to_datalink\n");
+        //("down_to_datalink\n");
 	extern void printmsg(char *, size_t);
 
         
@@ -68,7 +68,7 @@ int down_to_datalink(int link, char *packet, size_t length) {
  PAYLOAD (A PACKET) UP TO THE NETWORK LAYER.
  */
 static EVENT_HANDLER(up_to_datalink) {
-        printf("up_to_datalink\n");
+        //("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
 	extern void printmsg(char *, size_t);
 	
@@ -76,17 +76,17 @@ static EVENT_HANDLER(up_to_datalink) {
 	size_t length;
 	int link;
 
-	//printf("Frame from physical layer\n");
+	////("Frame from physical layer\n");
 
 	length = sizeof(DLL_FRAME);
 	CHECK(CNET_read_physical(&link, (char *) &f, &length));
-	//printf("DLL frame : %s\n", (char *) &f);
+	////("DLL frame : %s\n", (char *) &f);
 // 	printmsg((char*) &f, length);
 	CHECK(up_to_network(f.packet, length, link));
 }
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
-        //printf("timeouts\n");
+        ////("timeouts\n");
 	extern void printmsg(char *, size_t);
 	CnetTime timeout;
 	if (timer == lasttimer) {
@@ -97,14 +97,14 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 
 			timeout = temp.length * (CnetTime) 8000000
 					/ linkinfo[temp.link].bandwidth;
-			lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
+			lasttimer = CNET_start_timer(EV_TIMER1, 1.1 * timeout, 0);
 			size_t len = temp.length;
 			CHECK(CNET_write_physical_reliable(temp.link, temp.packet, &len));
-                        //printf("write_physical\n");
+                        ////("write_physical\n");
 			//(temp.packet, len);
 
 			outQueue(&buf);
-			//printf("buf size after delete = %d\n", buf.size);
+			////("buf size after delete = %d\n", buf.size);
 
 		} else {
 
@@ -113,7 +113,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 		}
 	}
 
-	//printf("timer stop!\n");
+	////("timer stop!\n");
 }
 
 void reboot_DLL(void) {
@@ -121,14 +121,14 @@ void reboot_DLL(void) {
 	CHECK(CNET_set_handler(EV_PHYSICALREADY, up_to_datalink, 0));
 	CHECK(CNET_set_handler(EV_TIMER1, timeouts, 0));
 	initQueue(&buf);
-	//printf("buf init size = %d\n", buf.size);
+	////("buf init size = %d\n", buf.size);
 
 	//char * a = "abcde";
-	//printf("size of a: %d\n", sizeof(a));
+	////("size of a: %d\n", sizeof(a));
 
 	CnetTime timeout;
 
-	timeout = 10000;
+	timeout = 1;
 	lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
 
 	/* NOTHING ELSE TO DO! */
