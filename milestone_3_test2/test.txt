@@ -1,0 +1,46 @@
+134 received a correct packet with seqno 0 from 96
+
+134 received a correct packet with seqno 1 from 96
+
+134 received a correct packet with seqno 2 from 96
+
+134 received a correct packet with seqno 3 from 96
+
+134 received a correct packet with seqno 4 from 96
+
+96 received a correct packet with seqno 5 from 134
+
+96 received a correct packet with seqno 6 from 134
+
+96 received a correct packet with seqno 7 from 134
+
+96 received a correct packet with seqno 8 from 134
+
+96 received a correct packet with seqno 9 from 134
+
+96 received a correct packet with seqno 10 from 134
+
+96 received a correct packet with seqno 11 from 134
+
+96 received a correct packet with seqno 12 from 134
+
+96 received a correct packet with seqno 13 from 134
+
+96 received a correct packet with seqno 14 from 134
+
+96 received a correct packet with seqno 15 from 134
+
+96 received a correct packet with seqno 16 from 134
+
+96 received a correct packet with seqno 17 from 134
+
+96 received a correct packet with seqno 18 from 134
+
+96 received a correct packet with seqno 19 from 134
+
+96 received a correct packet with seqno 20 from 134
+
+96 received a correct packet with seqno 21 from 134
+
+96 received a correct packet with seqno 22 from 134
+
