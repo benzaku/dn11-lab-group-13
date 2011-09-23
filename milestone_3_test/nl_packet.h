@@ -2,6 +2,7 @@
 #define _NL_PACKET_H_
 #include <cnet.h>
 
+#define	MAXHOPS		10
 typedef enum {
 	NL_DATA, NL_ACK, NL_ERR_ACK
 } NL_PACKETKIND;
