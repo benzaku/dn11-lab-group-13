@@ -8,7 +8,7 @@
 #include "dll_basic.c"
 #include "nl_packet.h"
 
-#define	MAXHOPS		4
+#define MAXHOPS         4
 
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
@@ -51,82 +51,81 @@
  */
 
 #define PACKET_HEADER_SIZE  (sizeof(NL_PACKET) - MAX_MESSAGE_SIZE)
-#define PACKET_SIZE(p)	    (PACKET_HEADER_SIZE + p.length)
+#define PACKET_SIZE(p)      (PACKET_HEADER_SIZE + p.length)
 
-static char receiveBuffer[256][MAX_MESSAGE_SIZE];
-static char *rb[256];
-static size_t packet_length[256]
+static char receiveBuffer[255][MAX_MESSAGE_SIZE];
+static char *rb[255];
 NL_PACKET * lastPacket;
 
 void printmsg(char * msg, size_t length) {
-	size_t i;
-	//("msg :");
-	for (i = 0; i < length; i++) {
-		//("%d", (unsigned int) msg[i]);
-	}
-	//("\n");
+        size_t i;
+        //("msg :");
+        for (i = 0; i < length; i++) {
+                //("%d", (unsigned int) msg[i]);
+        }
+        //("\n");
 }
 
 void update_last_packet(NL_PACKET *last) {
-	int index = find_address(last->dest);
-	//NL_PACKET * lastsend = &(NL_table[index].lastpacket);
+        int index = find_address(last->dest);
+        //NL_PACKET * lastsend = &(NL_table[index].lastpacket);
 
-	memcpy(&(NL_table[index].lastpacket), last, PACKET_SIZE((*last)));
-	//free(temp);
+        memcpy(&(NL_table[index].lastpacket), last, PACKET_SIZE((*last)));
+        //free(temp);
 }
 
 NL_PACKET * get_last_packet(CnetAddr address) {
-	int index = find_address(address);
-	return (NL_PACKET *) &(NL_table[index].lastpacket);
+        int index = find_address(address);
+        return (NL_PACKET *) &(NL_table[index].lastpacket);
 }
 
 // here the second parameter is the length of msg of packet!
 void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link) {
-	//("sendPacketPiecesToDatalink\n");
+        //("sendPacketPiecesToDatalink\n");
 
-	//("linkinfo[choose_link] %d\n", linkinfo[choose_link].mtu);
-	size_t maxPacketLength = linkinfo[choose_link].mtu - PACKET_HEADER_SIZE;
+        //("linkinfo[choose_link] %d\n", linkinfo[choose_link].mtu);
+        size_t maxPacketLength = linkinfo[choose_link].mtu - PACKET_HEADER_SIZE;
 
-	NL_PACKET *tempPacket = (NL_PACKET *) packet;
+        NL_PACKET *tempPacket = (NL_PACKET *) packet;
 
-	size_t tempLength = length;
-	char *str = tempPacket->msg;
+        size_t tempLength = length;
+        char *str = tempPacket->msg;
 
-	NL_PACKET piecePacket;
+        NL_PACKET piecePacket;
 
-	piecePacket.src = tempPacket->src;
-	piecePacket.dest = tempPacket->dest;
-	piecePacket.kind = tempPacket->kind;
-	piecePacket.seqno = tempPacket->seqno;
-	piecePacket.hopcount = tempPacket->hopcount;
-	piecePacket.pieceEnd = tempPacket->pieceEnd;
-	piecePacket.pieceNumber = tempPacket->pieceNumber;
-	piecePacket.checksum = tempPacket->checksum;
+        piecePacket.src = tempPacket->src;
+        piecePacket.dest = tempPacket->dest;
+        piecePacket.kind = tempPacket->kind;
+        piecePacket.seqno = tempPacket->seqno;
+        piecePacket.hopcount = tempPacket->hopcount;
+        piecePacket.pieceEnd = tempPacket->pieceEnd;
+        piecePacket.pieceNumber = tempPacket->pieceNumber;
+        piecePacket.checksum = tempPacket->checksum;
 
-	while (tempLength > maxPacketLength) {
+        while (tempLength > maxPacketLength) {
 
-		piecePacket.length = maxPacketLength;
-		memcpy(piecePacket.msg, str, maxPacketLength);
+                piecePacket.length = maxPacketLength;
+                memcpy(piecePacket.msg, str, maxPacketLength);
 
-		CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
-				PACKET_SIZE(piecePacket)));
-		//("piece %d down_to_datalink\n", piecePacket.pieceNumber);
+                CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
+                                PACKET_SIZE(piecePacket)));
+                //("piece %d down_to_datalink\n", piecePacket.pieceNumber);
 
-		str = str + maxPacketLength;
-		piecePacket.pieceNumber = piecePacket.pieceNumber + 1;
+                str = str + maxPacketLength;
+                piecePacket.pieceNumber = piecePacket.pieceNumber + 1;
 
-		tempLength = tempLength - maxPacketLength;
-	}
+                tempLength = tempLength - maxPacketLength;
+        }
 
-	piecePacket.pieceEnd = 1;
-	piecePacket.length = tempLength;
+        piecePacket.pieceEnd = 1;
+        piecePacket.length = tempLength;
 
-	memcpy(piecePacket.msg, str, tempLength);
-	////("Required link is provided link = %d\n", choose_link);
-	CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
-			PACKET_SIZE(piecePacket)));
-	//("last piece %d down_to_datalink\n", piecePacket.pieceNumber);
-	////("Provided link = %d sent! \n", choose_link);
+        memcpy(piecePacket.msg, str, tempLength);
+        ////("Required link is provided link = %d\n", choose_link);
+        CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
+                        PACKET_SIZE(piecePacket)));
+        //("last piece %d down_to_datalink\n", piecePacket.pieceNumber);
+        ////("Provided link = %d sent! \n", choose_link);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -137,57 +136,57 @@ void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link) {
  */
 static void flood3(char *packet, size_t length, int choose_link, int avoid_link) {
 
-	//("flood3\n");
-	NL_PACKET *p = (NL_PACKET *) packet;
+        //("flood3\n");
+        NL_PACKET *p = (NL_PACKET *) packet;
 
-	/*  REQUIRED LINK IS PROVIDED - USE IT */
-	if (choose_link != 0) {
-		sendPacketPiecesToDatalink(packet, p->length, choose_link);
-	}
+        /*  REQUIRED LINK IS PROVIDED - USE IT */
+        if (choose_link != 0) {
+                sendPacketPiecesToDatalink(packet, p->length, choose_link);
+        }
 
-	/*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
-	else {
-		int links_wanted = NL_linksofminhops(p->dest);
-		int link;
+        /*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
+        else {
+                int links_wanted = NL_linksofminhops(p->dest);
+                int link;
 
-		for (link = 1; link <= nodeinfo.nlinks; ++link) {
+                for (link = 1; link <= nodeinfo.nlinks; ++link) {
 
-			if (link == avoid_link) /* possibly avoid this one */{
-				continue;
-			}
-			if (links_wanted & (1 << link)) /* use this link if wanted */
-			{
+                        if (link == avoid_link) /* possibly avoid this one */{
+                                continue;
+                        }
+                        if (links_wanted & (1 << link)) /* use this link if wanted */
+                        {
 
 
-				sendPacketPiecesToDatalink(packet, p->length, link);
+                                sendPacketPiecesToDatalink(packet, p->length, link);
 
-			}
-		}
-	}
+                        }
+                }
+        }
 }
 
 /*  down_to_network() RECEIVES NEW MESSAGES FROM THE APPLICATION LAYER AND
  PREPARES THEM FOR TRANSMISSION TO OTHER NODES.
  */
 static EVENT_HANDLER( down_to_network) {
-	NL_PACKET p;
+        NL_PACKET p;
 
-	p.length = sizeof(p.msg);
-	CHECK(CNET_read_application(&p.dest, p.msg, &p.length));
-	CNET_disable_application(p.dest);
+        p.length = sizeof(p.msg);
+        CHECK(CNET_read_application(&p.dest, p.msg, &p.length));
+        CNET_disable_application(p.dest);
 
-	p.src = nodeinfo.address;
-	p.kind = NL_DATA;
-	p.hopcount = 0;
-	p.seqno = NL_nextpackettosend(p.dest);
-	p.pieceNumber = 0;
-	p.pieceEnd = 0;
+        p.src = nodeinfo.address;
+        p.kind = NL_DATA;
+        p.hopcount = 0;
+        p.seqno = NL_nextpackettosend(p.dest);
+        p.pieceNumber = 0;
+        p.pieceEnd = 0;
 
-	p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.length);
-	lastPacket = &p;
+        p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.length);
+        lastPacket = &p;
 
-	flood3((char *) &p, PACKET_SIZE(p), 0, 0);
-	update_last_packet(&p);
+        flood3((char *) &p, PACKET_SIZE(p), 0, 0);
+        update_last_packet(&p);
 
 }
 
@@ -197,202 +196,176 @@ static EVENT_HANDLER( down_to_network) {
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
-	NL_PACKET *p = (NL_PACKET *) packet;
+        NL_PACKET *p = (NL_PACKET *) packet;
 
-	//("up to network\n");
-	++p->hopcount; /* took 1 hop to get here */
-	////("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
-	/*  IS THIS PACKET IS FOR ME? */
-	if (p->dest == nodeinfo.address) {
-		switch (p->kind) {
-		case NL_DATA:
-			if (p->seqno == NL_packetexpected(p->src)) {
-				length = p->length;
-				memcpy(rb[p->src], (char *) p->msg, length);
-				rb[p->src] = rb[p->src] + length;
-				packet_length[p->src] += length;
+        //("up to network\n");
+        ++p->hopcount; /* took 1 hop to get here */
+        ////("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
+        /*  IS THIS PACKET IS FOR ME? */
+        if (p->dest == nodeinfo.address) {
+                switch (p->kind) {
+                case NL_DATA:
+                        if (p->seqno == NL_packetexpected(p->src)) {
 
-				if (p->pieceEnd) {
-					CnetAddr tmpaddr;
+                                length = p->length;
+                                memcpy(rb[p->src], (char *) p->msg, length);
+                                rb[p->src] = rb[p->src] + length;
 
-					//length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-					//	- PACKET_HEADER_SIZE) + p->length;
-					length = packet_length[p->scr];
-					int p_checksum = p->checksum;
-					int checksum = CNET_ccitt(
-							(unsigned char *) (receiveBuffer[p->src]),
-							(int) length);
-					if (p_checksum != checksum) {
-						/***************************send back error ack**************/
-						NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                if (p->pieceEnd) {
+                                        CnetAddr tmpaddr;
 
-						tmpaddr = p->src; /* swap src and dest addresses */
-						p->src = p->dest;
-						p->dest = tmpaddr;
+                                        length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
+                                                        - PACKET_HEADER_SIZE) + p->length;
+                                        int p_checksum = p->checksum;
+                                        int checksum = CNET_ccitt(
+                                                        (unsigned char *) (receiveBuffer[p->src]),
+                                                        (int) length);
+                                        if (p_checksum != checksum) {
+                                                /***************************send back error ack**************/
+                                                NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 
-						p->kind = NL_ERR_ACK;
-						p->hopcount = 0;
-						p->length = 0;
-						flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
+                                                tmpaddr = p->src; /* swap src and dest addresses */
+                                                p->src = p->dest;
+                                                p->dest = tmpaddr;
+
+                                                p->kind = NL_ERR_ACK;
+                                                p->hopcount = 0;
+                                                p->length = 0;
+                                                flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
                                                 
                                                 rb[p->src] = &receiveBuffer[p->src][0];
-						return 0;
-						/***************************end******************************/
-					}
-					if (CNET_write_application(receiveBuffer[p->src], &length)
-							== -1) {
-						//source node should send this msg again
-						//printf("===\ncnet_errno = %d\n===\n", cnet_errno);
-						//printf("error count: %d\n", ++ err_count);
-						if (cnet_errno == ER_CORRUPTFRAME) {
-							//printf("\nWarning: frame corrupted\n==\n");
-							printf("%d received a corrupt packet with seqno %d from %d\n\n", p->dest, p->seqno, p->src);
-						} else if (cnet_errno == ER_MISSINGMSG) {
-							//printf("\nWarning: frame missed\n\n");
-							printf("%d received a unordered packet with seqno %d from %d\n\n", p->dest, p->seqno, p->src);
-						} else if (cnet_errno == ER_BADSIZE){
-						        printf("%d received a loss packet with seqno %d from %d\n\n", p->dest, p->seqno, p->src);
-						}
-						
-						
-						rb[p->src] = &receiveBuffer[p->src][0];
+                                                return 0;
+                                                /***************************end******************************/
+                                        }
+                                        if (CNET_write_application(receiveBuffer[p->src], &length)
+                                                        == -1) {
+                                                //source node should send this msg again
+                                                //printf("===\ncnet_errno = %d\n===\n", cnet_errno);
+                                                //printf("error count: %d\n", ++ err_count);
+                                                if (cnet_errno == ER_CORRUPTFRAME) {
+                                                        //printf("\nWarning: frame corrupted\n==\n");
+                                                } else if (cnet_errno == ER_MISSINGMSG) {
+                                                        //printf("\nWarning: frame missed\n\n");
+                                                }
+                                        }
 
-						inc_NL_packetexpected(p->src);
+                                        rb[p->src] = &receiveBuffer[p->src][0];
 
-						NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                        inc_NL_packetexpected(p->src);
 
-						tmpaddr = p->src; /* swap src and dest addresses */
-						p->src = p->dest;
-						p->dest = tmpaddr;
+                                        NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 
-						p->kind = NL_ERR_ACK;
-						p->hopcount = 0;
-						p->length = 0;
-						packet_length[p->src] = 0;
-						flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
-					} else {
-					      printf("%d received a correct packet with seqno %d from %d\n\n", p->dest, p->seqno, p->src);
-					      rb[p->src] = &receiveBuffer[p->src][0];
+                                        tmpaddr = p->src; /* swap src and dest addresses */
+                                        p->src = p->dest;
+                                        p->dest = tmpaddr;
 
-					      inc_NL_packetexpected(p->src);
+                                        p->kind = NL_ACK;
+                                        p->hopcount = 0;
+                                        p->length = 0;
+                                        flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
 
-					      NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                }
+                        }
+                        break;
 
-					      tmpaddr = p->src; /* swap src and dest addresses */
-					      p->src = p->dest;
-					      p->dest = tmpaddr;
+                case NL_ACK:
+                        if (p->seqno == NL_ackexpected(p->src)) {
+                                ////("ACK come!\n");
+                                inc_NL_ackexpected(p->src);
+                                NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                CHECK(CNET_enable_application(p->src));
+                        }
+                        break;
+                case NL_ERR_ACK:
+                        printf("ERROR ACK!\n");
+                        if (p->seqno == NL_ackexpected(p->src)) {
+                                NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                printf("packet %d (to %d) error!\n", p->seqno, p->src);
+                                /*
+                                NL_PACKET * packettoresend = get_last_packet(p->src);
+                                printf("length = %d seq = %d\n", packettoresend->length,
+                                                packettoresend->seqno);
 
-					      p->kind = NL_ACK;
-					      p->hopcount = 0;
-					      p->length = 0;
-					      packet_length[p->src] = 0;
-					      flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
-					}
+                                int a = packettoresend->checksum;
+                                int b = CNET_ccitt((unsigned char *) (packettoresend->msg),
+                                                (int) (packettoresend->length));
+                                if (a == b) {
+                                        printf("ok!\n");
+                                } else
+                                        printf("wrong!\n");
+                                int len = PACKET_HEADER_SIZE + packettoresend->length;
+                                flood3((char *) packettoresend, len, 0, 0);
+                                */
 
-				}
-			}
-			break;
+                        }
+                        break;
+                default:
+                        //("it's nothing!====================\n");
+                        break;
+                }
+        }
+        /* THIS PACKET IS FOR SOMEONE ELSE */
+        else {
+                //              //("hopcount = %d\n", p->hopcount);
+                //              //("MAXHOPS = %d\n", MAXHOPS);
+                if (p->hopcount < MAXHOPS) { /* if not too many hops... */
+                        ////("other's frame!\n");
 
-		case NL_ACK:
-			if (p->seqno == NL_ackexpected(p->src)) {
-				////("ACK come!\n");
-				inc_NL_ackexpected(p->src);
-				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-				CHECK(CNET_enable_application(p->src));
-			}
-			break;
-		case NL_ERR_ACK:
-			printf("ERROR ACK!\n");
-			if (p->seqno == NL_ackexpected(p->src)) {
-				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-				printf("packet %d (from %d to %d) error!\n", p->seqno, nodeinfo.address, p->src);
-				/*
-				NL_PACKET * packettoresend = get_last_packet(p->src);
-				printf("to send packet: src = %d  des = %d  length = %d  seqno = %d\n", packettoresend->src, packettoresend->dest, packettoresend->length,
-						packettoresend->seqno);
+                        //("piece for another node arrives\n");
+                        length = p->length;
+                        memcpy(rb[p->src], (char *) p->msg, length);
+                        rb[p->src] = rb[p->src] + length;
 
-				int a = packettoresend->checksum;
-				int b = CNET_ccitt((unsigned char *) (packettoresend->msg),
-						(int) (packettoresend->length));
-				if (a == b) {
-					printf("ok!\n");
-				} else
-					printf("wrong!\n");
-				int len = PACKET_HEADER_SIZE + packettoresend->length;
-				flood3((char *) packettoresend, len, 0, 0);
-				*/
+                        if (p->pieceEnd) {
+                                //("last piece for another node arrives\n");
+                                length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
+                                                - PACKET_HEADER_SIZE) + p->length;
 
-			}
-			break;
-		default:
-			//("it's nothing!====================\n");
-			break;
-		}
-	}
-	/* THIS PACKET IS FOR SOMEONE ELSE */
-	else {
-		// 		//("hopcount = %d\n", p->hopcount);
-		// 		//("MAXHOPS = %d\n", MAXHOPS);
-		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
-			////("other's frame!\n");
+                                NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 
-			//("piece for another node arrives\n");
-			length = p->length;
-			memcpy(rb[p->src], (char *) p->msg, length);
-			rb[p->src] = rb[p->src] + length;
-			packet_length[p->src] += length;
+                                NL_PACKET wholePacket;
 
-			if (p->pieceEnd) {
-				//("last piece for another node arrives\n");
-				//length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-				//		- PACKET_HEADER_SIZE) + p->length;
-				length = packet_length[p->src];
-				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                wholePacket.src = p->src;
+                                wholePacket.dest = p->dest;
+                                wholePacket.kind = p->kind;
+                                wholePacket.seqno = p->seqno;
+                                wholePacket.hopcount = p->hopcount;
+                                wholePacket.pieceEnd = 0;
+                                wholePacket.pieceNumber = 0;
+                                wholePacket.length = length;
 
-				NL_PACKET wholePacket;
+                                memcpy(wholePacket.msg, receiveBuffer[p->src], length);
 
-				wholePacket.src = p->src;
-				wholePacket.dest = p->dest;
-				wholePacket.kind = p->kind;
-				wholePacket.seqno = p->seqno;
-				wholePacket.hopcount = p->hopcount;
-				wholePacket.pieceEnd = 0;
-				wholePacket.pieceNumber = 0;
-				wholePacket.length = length;
+                                //                             //("contents of msg forwarding is \n %s\n", receiveBuffer[p->src]);
+                                flood3((char *) &wholePacket, PACKET_SIZE(wholePacket), 0,
+                                                arrived_on_link);
+                                rb[p->src] = &receiveBuffer[p->src][0];
 
-				memcpy(wholePacket.msg, receiveBuffer[p->src], length);
+                        }
 
-				//                             //("contents of msg forwarding is \n %s\n", receiveBuffer[p->src]);
-				flood3((char *) &wholePacket, PACKET_SIZE(wholePacket), 0,
-						arrived_on_link);
-				rb[p->src] = &receiveBuffer[p->src][0];
+                } else
 
-			}
-
-		} else
-
-			//("drop\n");
-			/* silently drop */;
-	}
-	return (0);
+                        //("drop\n");
+                        /* silently drop */;
+        }
+        return (0);
 }
 
 /* ----------------------------------------------------------------------- */
 
 EVENT_HANDLER( reboot_node) {
-	if (nodeinfo.nlinks > 32) {
-		// 		f//(stderr, "flood3 flooding will not work here\n");
-		exit(1);
-	}
+        if (nodeinfo.nlinks > 32) {
+                //              f//(stderr, "flood3 flooding will not work here\n");
+                exit(1);
+        }
 
-	for (int i = 0; i <= 255; i++) {
-		rb[i] = receiveBuffer[i];
-		packet_length[i] = 0;
-	}
+        for (int i = 0; i <= 255; i++) {
+                rb[i] = receiveBuffer[i];
+        }
 
-	reboot_DLL();
-	reboot_NL_table();
+        reboot_DLL();
+        reboot_NL_table();
 
-	CHECK(CNET_set_handler(EV_APPLICATIONREADY, down_to_network, 0));
-	CHECK(CNET_enable_application(ALLNODES));
+        CHECK(CNET_set_handler(EV_APPLICATIONREADY, down_to_network, 0));
+        CHECK(CNET_enable_application(ALLNODES));
 }
