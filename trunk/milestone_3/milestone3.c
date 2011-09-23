@@ -184,8 +184,9 @@ static EVENT_HANDLER( down_to_network) {
 
 	p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.length);
 	lastPacket = &p;
-	update_last_packet(&p);
+
 	flood3((char *) &p, PACKET_SIZE(p), 0, 0);
+	update_last_packet(&p);
 
 }
 
@@ -278,6 +279,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			if (p->seqno == NL_ackexpected(p->src)) {
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				printf("packet %d (to %d) error!\n", p->seqno, p->src);
+				/*
 				NL_PACKET * packettoresend = get_last_packet(p->src);
 				printf("length = %d seq = %d\n", packettoresend->length,
 						packettoresend->seqno);
@@ -291,6 +293,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					printf("wrong!\n");
 				int len = PACKET_HEADER_SIZE + packettoresend->length;
 				flood3((char *) packettoresend, len, 0, 0);
+				*/
 
 			}
 			break;
