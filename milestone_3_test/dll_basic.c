@@ -79,10 +79,16 @@ static EVENT_HANDLER(up_to_datalink) {
 	//printf("Frame from physical layer\n");
 
 	length = sizeof(DLL_FRAME);
-	CHECK(CNET_read_physical(&link, (char *) &f, &length));
+	//CHECK(CNET_read_physical(&link, (char *) &f, &length));
+	if(CNET_read_physical(&link, (char *) &f, &length) == -1){
+	  if(cnet_errno == ER_CORRUPTFRAME)
+	    printf("corrupt frame\n\n");
+	    exit(1);
+	} else{
 	//printf("DLL frame : %s\n", (char *) &f);
 // 	printmsg((char*) &f, length);
-	CHECK(up_to_network(f.packet, length, link));
+	  CHECK(up_to_network(f.packet, length, link));
+	}
 }
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
