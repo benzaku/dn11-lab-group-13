@@ -7,8 +7,6 @@
 #include "nl_table.c"
 #include "dll_basic.c"
 
-#define	MAXHOPS		10
-
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
  the information in their headers is used to update the NL table.
@@ -229,14 +227,18 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                                         (int) length);
                                         if (p_checksum != checksum) {
                                                 /***************************send back error ack**************/
-                                                NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+						//NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                                NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 
                                                 tmpaddr = p->src; /* swap src and dest addresses */
                                                 p->src = p->dest;
                                                 p->dest = tmpaddr;
 
                                                 p->kind = NL_ERR_ACK;
-                                                p->hopcount = 0;
+                                                //p->hopcount = 0;
+						p->traveled_hops_count = 0;
+						memset(p->traveled_hops, -1, MAXHOPS*sizeof(int));
+						p->trans_time = 0;
                                                 p->length = 0;
                                                 flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
                                                 return 0;
@@ -294,7 +296,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		 case NL_ERR_ACK:
                         printf("ERROR ACK!\n");
                         if (p->seqno == NL_ackexpected(p->src)) {
-                                NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                //NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+                                NL_savehopcount(p->src, p->trans_time, arrived_on_link);
                                 printf("packet %d (to %d) error!\n", p->seqno, p->src);
                                 NL_PACKET * packettoresend = get_last_packet(p->src);
                                 printf("length = %d seq = %d\n", packettoresend->length,
@@ -312,7 +315,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
                         }
                         break;
-		default:
+		default: ;
 			//printf("it's nothing!====================\n");
 		}
 	}
