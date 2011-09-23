@@ -232,6 +232,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 						p->hopcount = 0;
 						p->length = 0;
 						flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
+                                                
+                                                rb[p->src] = &receiveBuffer[p->src][0];
 						return 0;
 						/***************************end******************************/
 					}
