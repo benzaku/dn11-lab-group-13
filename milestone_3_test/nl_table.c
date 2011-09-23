@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "nl_table.h"
+#include "nl_packet.h"
 
 // ---- A SIMPLE NETWORK LAYER SEQUENCE TABLE AS AN ABSTRACT DATA TYPE ----
 
@@ -14,7 +15,8 @@ typedef struct {
 	int packetexpected;
 //	int minhops; // minimum known hops to remote node
 	int minhop_link; // link via which minhops path observed
-	float minhop_trans_time;
+	int minhop_trans_time;
+	NL_PACKET lastpacket;
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
