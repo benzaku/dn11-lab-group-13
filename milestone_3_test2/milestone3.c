@@ -55,7 +55,7 @@
 
 static char receiveBuffer[256][MAX_MESSAGE_SIZE];
 static char *rb[256];
-static size_t packet_length[256];
+//static size_t packet_length[256];
 NL_PACKET * lastPacket;
 static int mtu;
 
@@ -194,7 +194,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	//printf("up to network at %d (from %d to %d)\n", nodeinfo.address, p->src, p->dest);
         ++p->hopcount; /* took 1 hop to get here */
         mtu = linkinfo[arrived_on_link].mtu;
-        p->trans_time += ((CnetTime)8000000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)/mtu;
+        p->trans_time += ((CnetTime)8000 * 1000 * mtu / linkinfo[arrived_on_link].bandwidth + linkinfo[arrived_on_link].propagationdelay)*100/mtu;
         ////("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
         /*  IS THIS PACKET IS FOR ME? */
         if (p->dest == nodeinfo.address) {
@@ -204,19 +204,20 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 length = p->length;
                                 memcpy(rb[p->src], (char *) p->msg, length);
                                 rb[p->src] = rb[p->src] + length;
-				packet_length[p->src] += length;
+				//packet_length[p->src] += length;
 
                                 if (p->pieceEnd) {
                                         CnetAddr tmpaddr;
-                                        //length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-                                          //              - PACKET_HEADER_SIZE) + p->length;
-					length = packet_length[p->src];
-					packet_length[p->src] = 0;
+                                        length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
+                                                        - PACKET_HEADER_SIZE) + p->length;
+					//length = packet_length[p->src];
+					//packet_length[p->src] = 0;
                                         int p_checksum = p->checksum;
                                         int checksum = CNET_ccitt(
                                                         (unsigned char *) (receiveBuffer[p->src]),
                                                         (int) length);
-					printf("%d received a packet, src = %d, des = %d, seqno = %d receive_length = %d\n", nodeinfo.address, p->src, p->dest, p->seqno, length);
+					printf("%d received a packet, src = %d, des = %d, seqno = %d receive_length = %d \n", nodeinfo.address, p->src, p->dest, p->seqno, length);
+					printf("last_piece_trans_time = %d, hopcount = %d\n", p->trans_time, p->hopcount);
 					printf("src_checksum = %d calc_checksum = %d, ", p_checksum, checksum);
                                         if (p_checksum != checksum) {
                                                 /***************************send back error ack**************/
@@ -330,13 +331,14 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                         length = p->length;
                         memcpy(rb[p->src], (char *) p->msg, length);
                         rb[p->src] = rb[p->src] + length;
-			packet_length[p->src] += length;
+			//packet_length[p->src] += length;
 
                         if (p->pieceEnd) {
-                                //("last piece for another node arrives\n");
-                                //length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-                                  //              - PACKET_HEADER_SIZE) + p->length;
-				length = packet_length[p->src];
+                                //printf("last piece for another node arrives\n");
+                                length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
+                                                - PACKET_HEADER_SIZE) + p->length;
+				//length = packet_length[p->src];
+				//packet_length[p->src] = 0;
                                 NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 
                                 NL_PACKET wholePacket;
@@ -352,8 +354,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				wholePacket.checksum = p->checksum;
 				wholePacket.trans_time = p->trans_time;
 				
-				packet_length[p->src] = 0;
-                                memcpy(wholePacket.msg, receiveBuffer[p->src], length);
+				memcpy(wholePacket.msg, receiveBuffer[p->src], length);
 
                                 //                             //("contents of msg forwarding is \n %s\n", receiveBuffer[p->src]);
                                 flood3((char *) &wholePacket, PACKET_SIZE(wholePacket), 0,
@@ -362,10 +363,11 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
                         }
 
-                } else
-
-                        //("drop\n");
-                        /* silently drop */;
+                } 
+                else {  /* silently drop */;
+		  //free(&p->msg);
+		  //free(p);
+		}
         }
         return (0);
 }
@@ -380,7 +382,7 @@ EVENT_HANDLER( reboot_node) {
 
         for (int i = 0; i <= 255; i++) {
                 rb[i] = receiveBuffer[i];
-		packet_length[i] = 0;
+		//packet_length[i] = 0;
         }
 	//memset(packet_length, 0, 256*sizeof(size_t));
         reboot_DLL();
