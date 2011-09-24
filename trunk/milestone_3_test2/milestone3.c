@@ -174,7 +174,7 @@ static EVENT_HANDLER( down_to_network) {
         p.hopcount = 0;
 	p.pieceNumber = 0;
         p.pieceEnd = 0;
-        p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.length);
+        p.checksum = CNET_ccitt((unsigned char *) (p.msg), (int) p.length);
 	p.trans_time = 0;
 	
         lastPacket = &p;
