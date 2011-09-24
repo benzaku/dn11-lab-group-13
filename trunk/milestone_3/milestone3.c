@@ -29,31 +29,12 @@
  file, the initial efficiency is the same as that of flooding1.c (about
  2%) but as the NL table improves, the efficiency rises to over 64%.
  */
-/*
- typedef enum {
- NL_DATA, NL_ACK, NL_ERR_ACK
- } NL_PACKETKIND;
 
- typedef struct {
- CnetAddr src;
- CnetAddr dest;
- NL_PACKETKIND kind; // only ever NL_DATA or NL_ACK
- int seqno; // 0, 1, 2, ...
- int hopcount;
-
- size_t pieceNumber;
- int pieceEnd;
- size_t length; // the length of the msg portion only
- //size_t no_pieces;
- int checksum;
- char msg[MAX_MESSAGE_SIZE];
- } NL_PACKET;
- */
 
 #define PACKET_HEADER_SIZE  (sizeof(NL_PACKET) - MAX_MESSAGE_SIZE)
 #define PACKET_SIZE(p)      (PACKET_HEADER_SIZE + p.length)
 
-static char receiveBuffer[255][255][MAX_MESSAGE_SIZE];
+// static char receiveBuffer[255][255][MAX_MESSAGE_SIZE];
 static char *rb[255][255];
 NL_PACKET * lastPacket;
 
@@ -206,9 +187,12 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                 switch (p->kind) {
                 case NL_DATA:
                         if (p->seqno == NL_packetexpected(p->src)) {
-
+                            
+                                if(p->pieceNumber == 0){
+                                    rb[p->src][p->dest] = malloc(MAX_MESSAGE_SIZE);
+                                }
                                 length = p->length;
-                                memcpy(rb[p->src], (char *) p->msg, length);
+                                memcpy(rb[p->src][p->dest], (char *) p->msg, length);
                                 rb[p->src][p->dest] = rb[p->src][p->dest] + length;
 
                                 if (p->pieceEnd) {
@@ -218,7 +202,9 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                                         - PACKET_HEADER_SIZE) + p->length;
                                         int p_checksum = p->checksum;
                                         int checksum = CNET_ccitt(
-                                                        (unsigned char *) (receiveBuffer[p->src][p->dest]),
+//                                                         (unsigned char *) (receiveBuffer[p->src][p->dest]),
+//                                                         (int) length);
+                                                        (unsigned char *) (rb[p->src][p->dest]),
                                                         (int) length);
                                         if (p_checksum != checksum) {
                                                 /***************************send back error ack**************/
@@ -233,12 +219,18 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                                 p->length = 0;
                                                 flood3(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
                                                 
-                                                rb[p->src][p->dest] = &receiveBuffer[p->src][p->dest][0];
+                                                free(rb[p->dest][p->src]);
+//                                                 rb[p->dest][p->src] = &receiveBuffer[p->src][p->dest][0];
                                                 return 0;
                                                 /***************************end******************************/
                                         }
-                                        if (CNET_write_application(receiveBuffer[p->src][p->dest], &length)
-                                                        == -1) {
+//                                         if (CNET_write_application(receiveBuffer[p->src][p->dest], &length)
+//                                                         == -1) 
+                                            
+                                        if (CNET_write_application(rb[p->src][p->dest], &length)
+                                                    == -1)
+                                        
+                                        {
                                                 //source node should send this msg again
                                                 //printf("===\ncnet_errno = %d\n===\n", cnet_errno);
                                                 //printf("error count: %d\n", ++ err_count);
@@ -249,7 +241,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                                 }
                                         }
 
-                                        rb[p->src][p->dest] = &receiveBuffer[p->src][p->dest][0];
+//                                         rb[p->src][p->dest] = &receiveBuffer[p->src][p->dest][0];
+                                        free(rb[p->src][p->dest]);
 
                                         inc_NL_packetexpected(p->src);
 
@@ -312,6 +305,9 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                         ////("other's frame!\n");
 
                         //("piece for another node arrives\n");
+                        if(p->pieceNumber == 0){
+                            rb[p->src][p->dest] = malloc(MAX_MESSAGE_SIZE);
+                        }
                         length = p->length;
                         memcpy(rb[p->src][p->dest], (char *) p->msg, length);
                         rb[p->src][p->dest] = rb[p->src][p->dest] + length;
@@ -334,16 +330,18 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 wholePacket.pieceNumber = 0;
                                 wholePacket.length = length;
 
-                                memcpy(wholePacket.msg, receiveBuffer[p->src][p->dest], length);
+//                                 memcpy(wholePacket.msg, receiveBuffer[p->src][p->dest], length);
+                                memcpy(wholePacket.msg, rb[p->src][p->dest], length);
 
                                 //                             //("contents of msg forwarding is \n %s\n", receiveBuffer[p->src]);
                                 flood3((char *) &wholePacket, PACKET_SIZE(wholePacket), 0,
                                                 arrived_on_link);
-                                rb[p->src][p->dest] = &receiveBuffer[p->src][p->dest][0];
+//                                 rb[p->src][p->dest] = &receiveBuffer[p->src][p->dest][0];
+                                free(rb[p->src][p->dest]);
 
                         }
 
-                } else
+                }
 
                         //("drop\n");
                         /* silently drop */;
@@ -359,11 +357,12 @@ EVENT_HANDLER( reboot_node) {
                 exit(1);
         }
 
-        for (int i = 0; i <= 255; i++) {
-            for (int j = 0; j <= 255; j++){
-                rb[i][j] = receiveBuffer[i][j];
-            }
-        }
+//         for (int i = 0; i <= 255; i++) {
+//             for (int j = 0; j <= 255; j++){
+//                 rb[i][j] = receiveBuffer[i][j];
+//             }
+//         }
+        
 
         reboot_DLL();
         reboot_NL_table();
