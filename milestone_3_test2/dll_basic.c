@@ -97,7 +97,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 
 			timeout = temp.length * (CnetTime) 8000000
 					/ linkinfo[temp.link].bandwidth;
-			lasttimer = CNET_start_timer(EV_TIMER1, 1.2 * timeout, 0);
+			lasttimer = CNET_start_timer(EV_TIMER1, 1.5 * timeout, 0);
 			size_t len = temp.length;
 			CHECK(CNET_write_physical_reliable(temp.link, temp.packet, &len));
                         ////("write_physical\n");
@@ -128,7 +128,7 @@ void reboot_DLL(void) {
 
 	CnetTime timeout;
 
-	timeout = 1;
+	timeout = 1000;
 	lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
 
 	/* NOTHING ELSE TO DO! */

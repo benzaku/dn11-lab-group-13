@@ -8,7 +8,7 @@
 #include "dll_basic.c"
 #include "nl_packet.h"
 
-#define MAXHOPS         8
+#define MAXHOPS         30
 
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
@@ -150,7 +150,6 @@ static void flood3(char *packet, size_t length, int choose_link, int avoid_link)
                 int link;
 
                 for (link = 1; link <= nodeinfo.nlinks; ++link) {
-
                         if (link == avoid_link) /* possibly avoid this one */
 			  continue;
                         if (links_wanted & (1 << link)) /* use this link if wanted */
@@ -381,8 +380,9 @@ EVENT_HANDLER( reboot_node) {
 
         for (int i = 0; i <= 255; i++) {
                 rb[i] = receiveBuffer[i];
+		packet_length[i] = 0;
         }
-	memset(packet_length, 0, 256*sizeof(size_t));
+	//memset(packet_length, 0, 256*sizeof(size_t));
         reboot_DLL();
         reboot_NL_table();
 
