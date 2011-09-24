@@ -98,8 +98,9 @@ void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link) {
         piecePacket.kind = tempPacket->kind;
         piecePacket.seqno = tempPacket->seqno;
         piecePacket.hopcount = tempPacket->hopcount;
+	piecePacket.pieceNumber = tempPacket->pieceNumber;
         piecePacket.pieceEnd = tempPacket->pieceEnd;
-        piecePacket.pieceNumber = tempPacket->pieceNumber;
+	piecePacket.src_packet_length = tempPacket->src_packet_length;
         piecePacket.checksum = tempPacket->checksum;
 	piecePacket.trans_time = tempPacket->trans_time;
 	
@@ -174,10 +175,11 @@ static EVENT_HANDLER( down_to_network) {
         p.hopcount = 0;
 	p.pieceNumber = 0;
         p.pieceEnd = 0;
-        p.checksum = CNET_ccitt((unsigned char *) (p.msg), (int) p.length);
+	p.src_packet_length = (int) p.length;
+        p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.src_packet_length);
 	p.trans_time = 0;
 	
-        lastPacket = &p;
+        //lastPacket = &p;
 	printf("packet generated, src = %d, des = %d, seqno = %d, send_length = %d, checksum = %d\n\n", nodeinfo.address, p.dest, p.seqno, p.length, p.checksum);
         flood3((char *) &p, PACKET_SIZE(p), 0, 0);
         update_last_packet(&p);
@@ -215,8 +217,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                         int p_checksum = p->checksum;
                                         int checksum = CNET_ccitt(
                                                         (unsigned char *) (receiveBuffer[p->src]),
-                                                        (int) length);
-					printf("%d received a packet, src = %d, des = %d, seqno = %d receive_length = %d \n", nodeinfo.address, p->src, p->dest, p->seqno, length);
+                                                        p->src_packet_length);
+					printf("%d received a packet, src = %d, des = %d, seqno = %d,  send_length = %d,receive_length = %d \n", nodeinfo.address, p->src, p->dest, p->seqno, p->src_packet_length, length);
 					printf("last_piece_trans_time = %d, hopcount = %d\n", p->trans_time, p->hopcount);
 					printf("src_checksum = %d calc_checksum = %d, ", p_checksum, checksum);
                                         if (p_checksum != checksum) {
@@ -232,6 +234,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 						p->pieceNumber = 0;
 						p->pieceEnd = 0;
 						p->length = 0;
+						p->src_packet_length = 0;
 						p->checksum = 0;
 						p->trans_time = 0;
 						
@@ -277,6 +280,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					p->pieceNumber = 0;
 					p->pieceEnd = 0;
 					p->length = 0;
+					p->src_packet_length = 0;
 					p->checksum = 0;
 					p->trans_time = 0;
 					
@@ -351,6 +355,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				wholePacket.pieceNumber = 0;
                                 wholePacket.pieceEnd = 0;
 				wholePacket.length = length;
+				wholePacket.src_packet_length = p->src_packet_length;
 				wholePacket.checksum = p->checksum;
 				wholePacket.trans_time = p->trans_time;
 				

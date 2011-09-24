@@ -15,6 +15,7 @@ typedef struct {
 	size_t pieceNumber;
 	unsigned short int pieceEnd;
 	size_t length; /* the length of the msg portion only */
+	int src_packet_length; /* dont change during routing */
 	int checksum;
 	unsigned int trans_time;
 	char msg[MAX_MESSAGE_SIZE];
