@@ -15,5 +15,5 @@ extern	void	inc_NL_packetexpected(CnetAddr address);
 extern	void	inc_NL_ackexpected(CnetAddr address);
 
 extern	int	NL_linksofminhops(CnetAddr address);
-extern	void	NL_savehopcount(CnetAddr address, int hops, int link);
+extern	void	NL_savehopcount(CnetAddr address, int trans_time, int link);
 #endif

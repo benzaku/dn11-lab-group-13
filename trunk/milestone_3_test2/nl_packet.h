@@ -11,13 +11,12 @@ typedef struct {
 	CnetAddr dest;
 	NL_PACKETKIND kind; /* only ever NL_DATA or NL_ACK */
 	int seqno; /* 0, 1, 2, ... */
-	int hopcount;
-
+	unsigned short int hopcount;
 	size_t pieceNumber;
-	int pieceEnd;
+	unsigned short int pieceEnd;
 	size_t length; /* the length of the msg portion only */
-	//size_t no_pieces;
 	int checksum;
+	int trans_time;
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
 
