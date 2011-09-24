@@ -263,6 +263,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                         }
                                         */
 					else {
+					   CHECK(CNET_write_application(receiveBuffer[p->src], &length));
 					  printf("correct packet\n", p->dest, p->seqno, p->src);
 					}
                                         rb[p->src] = &receiveBuffer[p->src][0];
