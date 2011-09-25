@@ -148,7 +148,7 @@ static EVENT_HANDLER( down_to_network) {
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	NL_PACKET *p = (NL_PACKET *) packet;
 	if (p->src == nodeinfo.address) {
-		printf("drop a packet at %d, src = %d, des = %d, seqno = %d\n",
+		printf("drop a packet at %d, src = %d, des = %d, seqno = %d\n\n",
 				nodeinfo.address, p->src, p->dest, p->seqno);
 		return 0;
 	}
