@@ -3,7 +3,7 @@
 #include <cnet.h>
 
 typedef enum {
-	NL_DATA, NL_ACK, NL_ERR_ACK
+	NL_DATA, NL_ACK, NL_ERR_ACK, NL_ERR_ACK_RESENT
 } NL_PACKETKIND;
 
 typedef struct {
@@ -18,6 +18,8 @@ typedef struct {
 	int src_packet_length; /* dont change during routing */
 	int checksum;
 	unsigned int trans_time;
+	unsigned short int is_resent;
+	
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
 
