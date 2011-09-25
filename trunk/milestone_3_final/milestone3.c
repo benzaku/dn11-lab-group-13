@@ -34,7 +34,7 @@
 // here the second parameter is the length of msg of packet!
 
 
-void sendPacketPiecesToDatalink(char *packet, size_t length, int choose_link) {
+void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
         //printf("send packet pieces to data link at %s\n", nodeinfo.nodename);
         size_t maxPacketLength = linkinfo[choose_link].mtu - PACKET_HEADER_SIZE;
 	
@@ -95,7 +95,7 @@ static void flood(char *packet, size_t length, int choose_link, int avoid_link) 
 
         /*  REQUIRED LINK IS PROVIDED - USE IT */
         if (choose_link != 0) {
-                sendPacketPiecesToDatalink(packet, p->length, choose_link);
+                down_pieces_to_datalink(packet, p->length, choose_link);
         }
 
         /*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
@@ -107,7 +107,7 @@ static void flood(char *packet, size_t length, int choose_link, int avoid_link) 
                         if (link == avoid_link) /* possibly avoid this one */
 			  continue;
                         if (links_wanted & (1 << link)) /* use this link if wanted */
-			  sendPacketPiecesToDatalink(packet, p->length, link);
+			  down_pieces_to_datalink(packet, p->length, link);
                 }
         }
 }
@@ -192,7 +192,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
 				NL_set_has_resent(p->src, 1);
-				NL_inc_resent_times(p->src); // for debug
+				//NL_inc_resent_times(p->src); // for debug
                                 flood((char *) packettoresend, len, 0, 0);
                                 
 			  } else{
@@ -209,8 +209,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 NL_savehopcount(p->src, p->trans_time, arrived_on_link);
                                 NL_PACKET * packettoresend = get_last_packet(p->src);
                                 printf("resend a resent packet, src = %d, des = %d, seqno = %d, send_length = %d, checksum = %d\n", packettoresend->src, packettoresend->dest, packettoresend->seqno, packettoresend->length, packettoresend->checksum);
-				printf("this packet has been resent %d times before this time\n", NL_get_resent_times(p->src)); //for debug
-				NL_inc_resent_times(p->src); // for debug
+				//printf("this packet has been resent %d times before this time\n", NL_get_resent_times(p->src)); //for debug
+				//NL_inc_resent_times(p->src); // for debug
                                 int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
                                 flood((char *) packettoresend, len, 0, 0);
@@ -325,7 +325,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack){
   printf("\n");
 }
 
-void printmsg(char * msg, size_t length) {
+void print_msg(char * msg, size_t length) {
         size_t i;
         //("msg :");
         for (i = 0; i < length; i++) {

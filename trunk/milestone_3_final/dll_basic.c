@@ -46,7 +46,7 @@ static struct elemType temp;
 int down_to_datalink(int link, char *packet, size_t length) {
 
         //("down_to_datalink\n");
-	extern void printmsg(char *, size_t);
+	extern void print_msg(char *, size_t);
 
         
 	//struct elemType temp;
@@ -70,7 +70,7 @@ int down_to_datalink(int link, char *packet, size_t length) {
 static EVENT_HANDLER(up_to_datalink) {
         //("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
-	extern void printmsg(char *, size_t);
+	//extern void print_msg(char *, size_t);
 	
         DLL_FRAME f;
 	size_t length;
@@ -87,7 +87,7 @@ static EVENT_HANDLER(up_to_datalink) {
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
         ////("timeouts\n");
-	extern void printmsg(char *, size_t);
+	//extern void print_msg(char *, size_t);
 	CnetTime timeout;
 	if (timer == lasttimer) {
 
