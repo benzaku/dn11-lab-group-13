@@ -17,12 +17,13 @@ typedef struct {
 	int minhop_trans_time;
 	int minhop_link; // link via which minhops path observed
 	NL_PACKET lastpacket;
+	unsigned short int has_resent;
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
 static int NL_table_size = 0;
 static int NL_table_capacity = 0;
-static int NL_table_increment = 5;
+static int NL_table_increment = 10;
 
 
 
@@ -45,6 +46,7 @@ static int find_address(CnetAddr address) {
 	NL_table[NL_table_size].address = address;
 	//NL_table[NL_table_size].minhops = INT_MAX;
 	NL_table[NL_table_size].minhop_trans_time = INT_MAX;
+	NL_table[NL_table_size].has_resent = 0;
 	return NL_table_size++;
 }
 
@@ -101,6 +103,15 @@ void NL_savehopcount(CnetAddr address, int trans_time, int link) {
 	}*/
 }
 
+int NL_get_has_resent(CnetAddr address){
+      int t = find_address(address);
+      return NL_table[t].has_resent;
+}
+
+void NL_set_has_resent(CnetAddr address, unsigned short int value){
+      int t = find_address(address);
+      NL_table[t].has_resent = value;
+}
 // -----------------------------------------------------------------
 
 static EVENT_HANDLER( show_NL_table) {
