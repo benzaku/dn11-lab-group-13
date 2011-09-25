@@ -54,7 +54,6 @@ struct elemType peekQueue(struct queueLK *hq) {
 	return hq->front->data;
 }
 
-
 int emptyQueue(struct queueLK *hq) {
 
 	if (hq->front == NULL) {
@@ -63,7 +62,6 @@ int emptyQueue(struct queueLK *hq) {
 		return 0;
 	}
 }
-
 
 void clearQueue(struct queueLK *hq) {
 	struct sNode *p = hq->front;
