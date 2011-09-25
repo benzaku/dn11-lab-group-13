@@ -343,7 +343,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 NL_savehopcount(p->src, p->trans_time, arrived_on_link);
                                 NL_PACKET * packettoresend = get_last_packet(p->src);
                                 printf("resend a resent packet, src = %d, des = %d, seqno = %d, send_length = %d, checksum = %d\n", packettoresend->src, packettoresend->dest, packettoresend->seqno, packettoresend->length, packettoresend->checksum);
-				printf("this packet has been resent %d times\n", NL_get_resent_times(p->src)); //for debug
+				printf("this packet has been resent %d times before this time\n", NL_get_resent_times(p->src)); //for debug
 				NL_inc_resent_times(p->src); // for debug
                                 int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
