@@ -8,7 +8,7 @@
 #include "dll_basic.c"
 #include "nl_packet.h"
 
-#define MAXHOPS         3
+#define MAXHOPS         10
 
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
@@ -227,7 +227,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					if(p->is_resent){
 					  printf("%d received a resent packet, src = %d, des = %d, seqno = %d,  send_length = %d,receive_length = %d \n", nodeinfo.address, p->src, p->dest, p->seqno, p->src_packet_length, length);
 					}else{
-					printf("%d received a packet, src = %d, des = %d, seqno = %d,  send_length = %d,receive_length = %d \n", nodeinfo.address, p->src, p->dest, p->seqno, p->src_packet_length, length);
+					  printf("%d received a packet, src = %d, des = %d, seqno = %d,  send_length = %d,receive_length = %d \n", nodeinfo.address, p->src, p->dest, p->seqno, p->src_packet_length, length);
 					}
 
 					printf("last_piece_trans_time = %d, hopcount = %d\n", p->trans_time, p->hopcount);
@@ -241,7 +241,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                                 p->src = p->dest;
                                                 p->dest = tmpaddr;
 						
-						if(p->is_resent)
+						if(p->is_resent == 1)
 						    p->kind = NL_ERR_ACK_RESENT;
 						  else
 						    p->kind = NL_ERR_ACK;
@@ -326,6 +326,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
 				NL_set_has_resent(p->src, 1);
+				NL_inc_resent_times(p->src); // for debug
                                 flood3((char *) packettoresend, len, 0, 0);
                                 
 			  } else{
@@ -342,6 +343,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                 NL_savehopcount(p->src, p->trans_time, arrived_on_link);
                                 NL_PACKET * packettoresend = get_last_packet(p->src);
                                 printf("resend a resent packet, src = %d, des = %d, seqno = %d, send_length = %d, checksum = %d\n", packettoresend->src, packettoresend->dest, packettoresend->seqno, packettoresend->length, packettoresend->checksum);
+				printf("this packet has been resent %d times\n", NL_get_resent_times(p->src)); //for debug
                                 int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
                                 flood3((char *) packettoresend, len, 0, 0);
