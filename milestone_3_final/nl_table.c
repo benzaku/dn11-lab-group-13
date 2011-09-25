@@ -18,7 +18,7 @@ typedef struct {
 	int minhop_link; // link via which minhops path observed
 	NL_PACKET lastpacket;
 	unsigned short int has_resent;
-	unsigned short int resent_times; //for debug
+	//unsigned short int resent_times; //for debug
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
@@ -48,7 +48,7 @@ static int find_address(CnetAddr address) {
 	//NL_table[NL_table_size].minhops = INT_MAX;
 	NL_table[NL_table_size].minhop_trans_time = INT_MAX;
 	NL_table[NL_table_size].has_resent = 0;
-	NL_table[NL_table_size].resent_times = 0;
+	//NL_table[NL_table_size].resent_times = 0;
 	return NL_table_size++;
 }
 
@@ -116,6 +116,7 @@ void NL_set_has_resent(CnetAddr address, unsigned short int value){
 }
 
 /* for debug */
+/*
 void NL_inc_resent_times(CnetAddr address){
      int t = find_address(address);
      NL_table[t].resent_times++;
@@ -125,6 +126,7 @@ unsigned short int NL_get_resent_times(CnetAddr address){
      int t = find_address(address);
      return NL_table[t].resent_times;
 }
+*/
 /* end debug */
 // -----------------------------------------------------------------
 
