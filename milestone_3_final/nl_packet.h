@@ -19,7 +19,7 @@ typedef struct {
 	int checksum;
 	unsigned int trans_time;
 	unsigned short int is_resent;
-	
+
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
 

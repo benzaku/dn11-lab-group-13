@@ -18,16 +18,13 @@ typedef struct {
 	int minhop_link; // link via which minhops path observed
 	NL_PACKET lastpacket;
 	unsigned short int has_resent;
-	//unsigned short int resent_times; //for debug
+//unsigned short int resent_times; //for debug
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
 static int NL_table_size = 0;
 static int NL_table_capacity = 0;
 static int NL_table_increment = 10;
-
-
-
 
 // -----------------------------------------------------------------
 
@@ -39,10 +36,12 @@ static int find_address(CnetAddr address) {
 			return t;
 
 	//  UNNOWN ADDRESS, SO WE MUST CREATE AND INITIALIZE A NEW ENTRY
-	if(NL_table_size == NL_table_capacity){
-	  NL_table = realloc(NL_table, (NL_table_size + NL_table_increment) * sizeof(NLTABLE));
-	  memset(&NL_table[NL_table_size], 0, NL_table_increment*sizeof(NLTABLE));
-	  NL_table_capacity += NL_table_increment;
+	if (NL_table_size == NL_table_capacity) {
+		NL_table = realloc(NL_table, (NL_table_size + NL_table_increment)
+				* sizeof(NLTABLE));
+		memset(&NL_table[NL_table_size], 0, NL_table_increment
+				* sizeof(NLTABLE));
+		NL_table_capacity += NL_table_increment;
 	}
 	NL_table[NL_table_size].address = address;
 	//NL_table[NL_table_size].minhops = INT_MAX;
@@ -98,35 +97,35 @@ void NL_savehopcount(CnetAddr address, int trans_time, int link) {
 		given_stats = true;
 	}
 	/*
-	if (NL_table[t].minhops > hops) {
-		NL_table[t].minhops = hops;
-		NL_table[t].minhop_link = link;
-		given_stats = true;
-	}*/
+	 if (NL_table[t].minhops > hops) {
+	 NL_table[t].minhops = hops;
+	 NL_table[t].minhop_link = link;
+	 given_stats = true;
+	 }*/
 }
 
-int NL_get_has_resent(CnetAddr address){
-      int t = find_address(address);
-      return NL_table[t].has_resent;
+int NL_get_has_resent(CnetAddr address) {
+	int t = find_address(address);
+	return NL_table[t].has_resent;
 }
 
-void NL_set_has_resent(CnetAddr address, unsigned short int value){
-      int t = find_address(address);
-      NL_table[t].has_resent = value;
+void NL_set_has_resent(CnetAddr address, unsigned short int value) {
+	int t = find_address(address);
+	NL_table[t].has_resent = value;
 }
 
 /* for debug */
 /*
-void NL_inc_resent_times(CnetAddr address){
-     int t = find_address(address);
-     NL_table[t].resent_times++;
-}
+ void NL_inc_resent_times(CnetAddr address){
+ int t = find_address(address);
+ NL_table[t].resent_times++;
+ }
 
-unsigned short int NL_get_resent_times(CnetAddr address){
-     int t = find_address(address);
-     return NL_table[t].resent_times;
-}
-*/
+ unsigned short int NL_get_resent_times(CnetAddr address){
+ int t = find_address(address);
+ return NL_table[t].resent_times;
+ }
+ */
 /* end debug */
 // -----------------------------------------------------------------
 
@@ -146,10 +145,11 @@ static EVENT_HANDLER( show_NL_table) {
 					NL_table[t].packetexpected);
 			if (NL_table[t].minhop_link != 0)
 				//printf(" %8d %8d", NL_table[t].minhops, NL_table[t].minhop_link);
-				printf(" %8d %8d", NL_table[t].minhop_trans_time, NL_table[t].minhop_link);
+				printf(" %8d %8d", NL_table[t].minhop_trans_time,
+						NL_table[t].minhop_link);
 			printf("\n");
 			//if(NL_table[t].lastpacket){
-				//printf("last packet sent = %d\n", NL_table[t].lastpacket->seqno);
+			//printf("last packet sent = %d\n", NL_table[t].lastpacket->seqno);
 			//}
 		}
 }
