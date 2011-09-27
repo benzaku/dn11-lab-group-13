@@ -5,7 +5,7 @@
 
 #define PACKET_HEADER_SIZE  (sizeof(NL_PACKET) - MAX_MESSAGE_SIZE)
 #define PACKET_SIZE(p)      (PACKET_HEADER_SIZE + p.length)
-#define MAXHOPS             10
+#define MAXHOPS             100
 
 static char receiveBuffer[256][MAX_MESSAGE_SIZE];
 static char *rb[256];
