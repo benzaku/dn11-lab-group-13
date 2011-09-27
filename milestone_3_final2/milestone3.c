@@ -147,6 +147,7 @@ static EVENT_HANDLER( down_to_network) {
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
+	printf("up to network\n");
 	NL_PACKET *p = (NL_PACKET *) packet;
 	if (p->src == nodeinfo.address) {
 		printf("drop a packet at %d, src = %d, des = %d, seqno = %d\n\n",
@@ -349,7 +350,9 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) 
 	p->checksum = 0;
 	p->trans_time = 0;
 	p->is_resent = 0;
+	RB_copy_whole_msg(p);
 	memset(&p->msg, 0, MAX_MESSAGE_SIZE * sizeof(char));
+	
 
 	tmpaddr = p->src; /* swap src and dest addresses */
 	p->src = p->dest;
