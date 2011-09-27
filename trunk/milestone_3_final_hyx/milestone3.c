@@ -242,11 +242,15 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
-			length = p->length;
-			memcpy(rb[p->src], (char *) p->msg, length);
-			rb[p->src] = rb[p->src] + length;
-			if (p->pieceEnd)
-				route_packet(p, arrived_on_link);
+			if (p->kind != NL_DATA) {
+				flood((char *) p, PACKET_HEADER_SIZE, 0, arrived_on_link);
+			} else {
+				length = p->length;
+				memcpy(rb[p->src], (char *) p->msg, length);
+				rb[p->src] = rb[p->src] + length;
+				if (p->pieceEnd)
+					route_packet(p, arrived_on_link);
+			}
 		} else
 			/* silently drop */;
 	}
