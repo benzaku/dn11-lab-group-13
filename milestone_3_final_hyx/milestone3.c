@@ -288,6 +288,35 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 }
 
 void route_packet(NL_PACKET *p, int arrived_on_link) {
+	CnetAddr tmpaddr;
+	int p_checksum = p->checksum;
+	int checksum =
+			CNET_ccitt((unsigned char *) (receiveBuffer[p->src]), p->src_packet_length);
+	if (p_checksum != checksum) {
+		//if errors occurs in forwarding just send bad ack
+		printf("===========================================\n");
+		printf("++++++++++++forwarding error !+++++++++++++\n");
+		printf("===========================================\n");
+		if (p->is_resent == 1)
+			p->kind = NL_ERR_ACK_RESENT;
+		else
+			p->kind = NL_ERR_ACK;
+		p->hopcount = 0;
+		p->pieceNumber = 0;
+		p->pieceEnd = 0;
+		p->length = 0;
+		p->src_packet_length = 0;
+		p->checksum = 0;
+		p->trans_time = 0;
+		p->is_resent = 0;
+
+		tmpaddr = p->src; /* swap src and dest addresses */
+		p->src = p->dest;
+		p->dest = tmpaddr;
+		flood((char *) p, PACKET_HEADER_SIZE, arrived_on_link, 0);
+		return;
+	}
+
 	size_t length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
 			- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
@@ -341,7 +370,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) 
 	p->checksum = 0;
 	p->trans_time = 0;
 	p->is_resent = 0;
-	memset(&p->msg, 0, MAX_MESSAGE_SIZE * sizeof(char));
+	memset(&p->msg, 0, MAX_MESSAGE_SIZE);
 
 	tmpaddr = p->src; /* swap src and dest addresses */
 	p->src = p->dest;
