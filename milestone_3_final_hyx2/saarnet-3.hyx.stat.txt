@@ -1,0 +1,26 @@
+3 hosts, 0 routers, 0 mobiles, 0 accesspoints
+Simulation time                     : 8538894
+Events raised                       : 52889
+Messages generated                  : 206
+Messages delivered                  : 205
+Message bandwidth                   : 469345
+Average delivery time               : 89993
+Frames transmitted                  : 24782
+Frames received                     : 24748
+Efficiency (bytes AL) / (bytes PL)  : 45.88
+Transmission cost                   : 154472
+EV_REBOOT                           : 3
+EV_PHYSICALREADY                    : 24748
+EV_APPLICATIONREADY                 : 206
+EV_TIMER1                           : 27932
+
+END-TO-END PERFORMANCE
+To node SB
+- from HOM :        9 msgs,      167 ms latency,      6.2 kB/s throughput
+- from SLS :       12 msgs,       12 ms latency,      6.0 kB/s throughput
+To node HOM
+- from SB  :       64 msgs,      114 ms latency,     41.3 kB/s throughput
+- from SLS :        4 msgs,      141 ms latency,      2.2 kB/s throughput
+To node SLS
+- from SB  :      109 msgs,       71 ms latency,     63.3 kB/s throughput
+- from HOM :        7 msgs,      158 ms latency,      4.8 kB/s throughput
