@@ -149,7 +149,7 @@ static EVENT_HANDLER( down_to_network) {
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
-	printf("up to network\n");
+	printf("up to network at hop %d\n", nodeinfo.address);
 	NL_PACKET *p = (NL_PACKET *) packet;
 	if (p->src == nodeinfo.address) {
 		printf("drop a packet at %d, src = %d, des = %d, seqno = %d\n\n",
@@ -254,11 +254,15 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			//length = p->length;
 			//memcpy(rb[p->src], (char *) p->msg, length);
 			//rb[p->src] = rb[p->src] + length;
-			RB_save_msg(p);
-			
-			if (p->pieceEnd)
+			if(p->kind != NL_DATA){
+			  route_packet(p, arrived_on_link);
+			} else{
+			  RB_save_msg(p);
+			  if (p->pieceEnd){
 				RB_copy_whole_msg(p);
 				route_packet(p, arrived_on_link);
+			  }
+			}
 		} else {/* silently drop */;
 		
 		}
@@ -346,7 +350,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) 
 	/* actually we just need to set p->length to 0 */
 	p->hopcount = 0;
 	p->pieceNumber = 0;
-	p->pieceEnd = 0;
+	p->pieceEnd = 1;
 	p->length = 0;
 	p->src_packet_length = 0;
 	p->checksum = 0;
@@ -395,11 +399,11 @@ EVENT_HANDLER( reboot_node) {
 		rb[i] = receiveBuffer[i];
 		//packet_length[i] = 0;
 	}*/
-
+	RB_init();
 	//memset(packet_length, 0, 256*sizeof(size_t));
 	reboot_DLL();
 	reboot_NL_table();
-
+	
 	CHECK(CNET_set_handler(EV_APPLICATIONREADY, down_to_network, 0));
 	CHECK(CNET_enable_application(ALLNODES));
 }
