@@ -2,7 +2,8 @@ compile = "milestone3.c"
 
 #include "saarland.map"
 //#include "linktypes.txt"
-
+bandwidth = 10 Mbps  
+costperframe = 10  
 host SB {
 	x = 45388, y = 44424
 	address = 134
