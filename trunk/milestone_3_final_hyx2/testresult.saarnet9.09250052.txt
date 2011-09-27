@@ -1,0 +1,123 @@
+packet generated, src = 137, des = 159, seqno = 0, send_length = 9304, checksum = 14290
+
+195 received a packet, src = 193, des = 195, seqno = 0,  send_length = 6874,receive_length = 6874 
+last_piece_trans_time = 807, hopcount = 2
+src_checksum = 55983 calc_checksum = packet generated, src = 163, des = 136, seqno = 0, send_length = 7645, checksum = 35493
+
+packet generated, src =packet generated, src = 195, des = 144, seqno = 0, send_length = 2packet generated, src =packet generated, src = 195, des = 132, seqno = 0, send_length = 4packet generated, src =packet generated, src = 195, des = 192, seqno = 0, send_length = 6733, checksum = 64985
+
+packet generated, src = 195, des = 136, seqno = 0, send_length = 3636, checksum = 49344
+
+ 163, des = 184, seqno = 0, send_length = 5023, checksum = 42441
+
+packet generated, src = 163, des = 168, seqno = 0, send_length = 3224, checksum = 1755
+
+packet generated, src = 163, des = 185, seqno = 0, send_length = 9591, checksum = 19257
+
+packet generated, src = 163, des = 164, seqno = 0, send_length = 7369, checksum = 53438
+
+acket generated, src = 158, des = 165, seqno = 0, send_length = 8526, checksum = 400packpacket generated, src = 158, des = 142, seqno = 0, send_length = 5080, checksum = 457packpacket generated, src = 158, des = 132, seqno = 0, send_length = 1313, checksum = 53994
+
+packet generated, src = 158, des = 137, seqno = 0, send_length = 7234, checksum = 27195
+
+et generated, src = 136, des = 142, seqno = 0, send_length = 2644, checksum = 260packpacket generated, src = 136, des = 145, seqno = 0, send_length = 4011, checksum = 30297
+
+
+packet generated, src = 191, des = 132, seqno = 0, send_length = 8904, chepacket generated, src = 193, des = 192, seqno = 0, send_length = 6590, checksum = 64698
+
+packet generated, src = 193, des = 15, seqno = 0, send_length = 7755, checksum = 19593
+
+ecksum = 56248
+packet generated, src = 204, des = 193, seqno = 0, send_length = 1573, checksum = 12083
+
+rc = 194, des = 160,packet generated, src = 131packet generated, src = 168, des = 158, seqno = 0, send_length = 9241, checksum = 5287
+
+= 22, des = 131, seqno = 0,  send_length = 10117,receive_length = 10117 
+last_piece_trans_time = 436, hopcount = 1
+src_checksum = 46743 calc_checksum = 46743, correct packet
+
+
+
+1, des = 193, seqno = 0, send_length = 4264, checksum = 40098
+
+
+packet generated, src = 159, des = 162, seqno = 0, send_length = 335, checksum = 63466
+
+packet generated, src = 159, des = 185, seqno = 0, send_length = 9959, checksum = 28057
+
+ppacket generated, src = 190, des = 164, seqno = 0, send_length = 6388, checksum = 62184
+
+ = 8025, checksum = 55076
+
+ans_time = 407, hopcount = 1
+src_checksum = 53438 calc_checksum = 53438, correct packet
+
+packet generated, src = 164, des = 132, seqno = 0, send_length = 7679, checksum = 42828
+
+des = 165, seqno = 0, send_length = 4551, checksum = 7283
+
+ 20412
+
+2579, checksum = 503
+
+packet generated, src = 147, des = 12, seqno = 0, send_length = 648, checksum = 48719
+
+packet generated, src = 147, des = 160, seqno = 0, send_length = 6440, checksum = 30257
+
+packet generated, src = 147, des = 136, seqno = 0, send_length = 8490, checksum = 30978
+
+packet generated, src = 147, des = 183, seqno = 1, send_length = 3568, checksum = 22867
+
+packet generated, src = 147, des = 191, seqno = 0, send_length = 8483, checksum = 30332
+
+packet generated, src = 147, des = 144, seqno = 0, send_length = 5252, checksum = 50158
+
+packet generated, src = 147, des = 142, seqno = 0, send_length = 6508, checksum = 39104
+
+generated, src = 135, des = 159, seqno = 0, send_length = 5642, checksum = 1624
+
+145, des = 131, seqno = 0, send_length = 4220, checksum = 14207
+
+packet generated, src = 145, des = 182, seqno = 0, send_length = 3561, checksum = 26601
+
+packet generated, src = 145, des = 140, seqno = 0, send_length = 6327, checksum = 13936
+
+packet generated, src = 145, des = 141, seqno = 0, send_length = 9476, checksum = 24918
+
+packet generated, src = 145, des = 143, seqno = 0, send_length = 7783, checksum = 7055
+
+packet generated, src = 145, des = 21, seqno = 0, send_length = 1136, checksum = 43569
+
+packet generated, src = 145, des = 22, seqno = 0, send_length = 123, checksum = 34825
+
+packet generated, src = 145, des = 170, seqno = 0, send_length = 958, checksum = 4824
+
+m = 12633 calc_checksum = 12633, correct packet
+
+030, checksum = 44964
+
+packet generated, s141 received a packet, src = 148, des = 141, seqno = 0,  send_length = 10237,receive_length = 10237 
+last_piece_trans_time = 586, hopcount = 2
+src_checksum = 56218 calc_checksum = 56218, correct packet
+
+drop a packet at 141, src = 141, des = 145, seqno = 0
+packet generated, src = 141, des = 145, seqno = 1, send_length = 6040, checksum = 40256
+
+nerateddrop a packet at 96, src = 96, des = 21, seqno = 0
+rop a packet at 170, src = 170, des = 152, seqno = 0
+s = 202, seqno = 0, send_length = 8920, checksum = 31186
+
+packet generated, src = 132, des = 140, seqno = 0, send_length = 7265, checksum = 56447
+
+send_length = 9502,receive_length = 9502 
+last_piece_trans_time = 812, hopcount = 1
+src_checksum = 46417 calc_checksum = 46417, correct packet
+
+160 received a packet, src = 161, des = 160, seqno = 0,  send_length = 9605,receive_length = 9605 
+last_piece_trans_time = 820, hopcount = 2
+src_checksum = 14294 calc_checksum = 14294, correct packet
+
+160 received a packet, src = 170, des = 160, seqno = 0,  send_length = 9376,receive_length = 9376 
+last_piece_trans_time = 155, hopcount = 1
+src_checksum = 40945 calc_checksum = 40945, correct packet
+
