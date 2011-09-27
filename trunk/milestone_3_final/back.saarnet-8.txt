@@ -1,18 +1,18 @@
 compile = "milestone3.c"
 
 #include "saarland.map"
-#include "linktypes.txt"
+//#include "linktypes.txt"
 
 host SB {
 	x = 45388, y = 44424
 	address = 134
 	messagerate = 10ms // ~ 1.6 Mbps
 
-	wan to HOM { LINK_LOW_MTU(1, 3450) }
-	wan to SLS { LINK_GOOD(10, 2622) }
-	wan to IGB { LINK_GOOD(10, 1584) }
-	wan to VK { LINK_STD(5, 1743) }
-	wan to SUL { LINK_STD(2, 1165) }
+	wan to HOM ////{ LINK_LOW_MTU(1, 3450) }
+	wan to SLS ////{ LINK_GOOD(10, 2622) }
+	wan to IGB ////{ LINK_GOOD(10, 1584) }
+	wan to VK ////{ LINK_STD(5, 1743) }
+	wan to SUL ////{ LINK_STD(2, 1165) }
 }
 
 host IGB {
@@ -20,10 +20,10 @@ host IGB {
 	address = 185
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to SB { LINK_GOOD(10, 1584) }
-	wan to HOM { LINK_GOOD(10, 1888) }
-	wan to NK { LINK_STD(4, 1144) }
-	wan to BLK { LINK_STD(2, 1187) }
+	wan to SB ////{ LINK_GOOD(10, 1584) }
+	wan to HOM ////{ LINK_GOOD(10, 1888) }
+	wan to NK ////{ LINK_STD(4, 1144) }
+	wan to BLK ////{ LINK_STD(2, 1187) }
 }
 
 host HOM {
@@ -31,9 +31,9 @@ host HOM {
 	address = 96
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to SB { LINK_LOW_MTU(1, 3450) }
-	wan to IGB { LINK_GOOD(10, 1888) }
-	wan to NK { LINK_STD(5, 1518) }
+	wan to SB ////{ LINK_LOW_MTU(1, 3450) }
+	wan to IGB ////{ LINK_GOOD(10, 1888) }
+	wan to NK ////{ LINK_STD(5, 1518) }
 }
 
 host NK {
@@ -41,10 +41,10 @@ host NK {
 	address = 170
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to HOM { LINK_STD(5, 1518) }
-	wan to IGB { LINK_STD(4, 1144) }
-	wan to WND { LINK_STD(6, 1797) }
-	wan to SPE { LINK_STD(1, 597) }
+	wan to HOM ////{ LINK_STD(5, 1518) }
+	wan to IGB ////{ LINK_STD(4, 1144) }
+	wan to WND ////{ LINK_STD(6, 1797) }
+	wan to SPE ////{ LINK_STD(1, 597) }
 }
 
 host WND {
@@ -52,10 +52,10 @@ host WND {
 	address = 160
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to NK { LINK_STD(6, 1797) }
-	wan to MRP { LINK_STD(2, 1164) }
-	wan to OTW { LINK_BAD(1, 1031) }
-	wan to NMB { LINK_STD(1, 857) }
+	wan to NK ////{ LINK_STD(6, 1797) }
+	wan to MRP ////{ LINK_STD(2, 1164) }
+	wan to OTW ////{ LINK_BAD(1, 1031) }
+	wan to NMB ////{ LINK_STD(1, 857) }
 }
 
 host SLS {
@@ -63,10 +63,10 @@ host SLS {
 	address = 182
 	messagerate = 15ms // ~ 1.2 Mbps
 
-	wan to SB { LINK_GOOD(10, 2622) }
-	wan to DIL { LINK_STD(5, 632) }
-	wan to SWB { LINK_STD(4, 568) }
-	wan to WLF { LINK_STD(1, 570) }
+	wan to SB ////{ LINK_GOOD(10, 2622) }
+	wan to DIL ////{ LINK_STD(5, 632) }
+	wan to SWB ////{ LINK_STD(4, 568) }
+	wan to WLF ////{ LINK_STD(1, 570) }
 }
 
 host DIL {
@@ -74,10 +74,10 @@ host DIL {
 	address = 183
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to SLS { LINK_STD(5, 632) }
-	wan to MZG { LINK_STD(5, 1518) }
-	wan to NLB { LINK_STD(4, 660) }
-	wan to WLF { LINK_BAD(1, 380) }
+	wan to SLS ////{ LINK_STD(5, 632) }
+	wan to MZG ////{ LINK_STD(5, 1518) }
+	wan to NLB ////{ LINK_STD(4, 660) }
+	wan to WLF ////{ LINK_BAD(1, 380) }
 }
 
 host MZG {
@@ -85,10 +85,10 @@ host MZG {
 	address = 184
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to DIL { LINK_STD(5, 1518) }
-	wan to BEK { LINK_STD(2, 831) }
-	wan to MTL { LINK_STD(1, 838) }
-	wan to LSH { LINK_STD_K(512, 1556) }
+	wan to DIL ////{ LINK_STD(5, 1518) }
+	wan to BEK ////{ LINK_STD(2, 831) }
+	wan to MTL ////{ LINK_STD(1, 838) }
+	wan to LSH ////{ LINK_STD_K(512, 1556) }
 }
 
 host VK {
@@ -96,9 +96,9 @@ host VK {
 	address = 140
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to SB { LINK_STD(5, 1743) }
-	wan to SWB { LINK_STD(4, 435) }
-	wan to PTL { LINK_STD(3, 700) }
+	wan to SB ////{ LINK_STD(5, 1743) }
+	wan to SWB ////{ LINK_STD(4, 435) }
+	wan to PTL ////{ LINK_STD(3, 700) }
 }
 
 host SWB {
@@ -106,9 +106,9 @@ host SWB {
 	address = 144
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to VK { LINK_STD(4, 435) }
-	wan to SLS { LINK_STD(4, 568) }
-	wan to WDG { LINK_BAD_K(512, 680) }
+	wan to VK ////{ LINK_STD(4, 435) }
+	wan to SLS //{ LINK_STD(4, 568) }
+	wan to WDG //{ LINK_BAD_K(512, 680) }
 }
 
 host WDG {
@@ -116,8 +116,8 @@ host WDG {
 	address = 143
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to SWB { LINK_BAD_K(512, 680) }
-	wan to UBH { LINK_BAD_K(256, 596) }
+	wan to SWB //{ LINK_BAD_K(512, 680) }
+	wan to UBH //{ LINK_BAD_K(256, 596) }
 }
 
 host UBH {
@@ -125,7 +125,7 @@ host UBH {
 	address = 142
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to WDG { LINK_BAD_K(256, 596) }
+	wan to WDG //{ LINK_BAD_K(256, 596) }
 }
 
 host PTL {
@@ -133,8 +133,8 @@ host PTL {
 	address = 141
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to VK { LINK_STD(3, 700) }
-	wan to HEW { LINK_XXX(3, 866) } // subsidence caused by mining damaged the cable...
+	wan to VK //{ LINK_STD(3, 700) }
+	wan to HEW //{ LINK_XXX(3, 866) } // subsidence caused by mining damaged the cable...
 }
 
 host HEW {
@@ -142,8 +142,8 @@ host HEW {
 	address = 145
 	messagerate = 40ms // ~ 0.4 Mbps
 
-	wan to PTL { LINK_XXX(3, 866) }
-	wan to LEB { LINK_STD(3, 967) }
+	wan to PTL //{ LINK_XXX(3, 866) }
+	wan to LEB //{ LINK_STD(3, 967) }
 }
 
 host LEB {
@@ -151,10 +151,10 @@ host LEB {
 	address = 148
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to HEW { LINK_STD(3, 967) }
-	wan to NLB { LINK_STD(4, 1329) }
-	wan to EPB { LINK_STD(2, 590) }
-	wan to SCH { LINK_STD(2, 800) }
+	wan to HEW //{ LINK_STD(3, 967) }
+	wan to NLB //{ LINK_STD(4, 1329) }
+	wan to EPB //{ LINK_STD(2, 590) }
+	wan to SCH //{ LINK_STD(2, 800) }
 }
 
 host NLB {
@@ -162,8 +162,8 @@ host NLB {
 	address = 147
 	messagerate = 40ms // ~ 0.4 Mbps
 
-	wan to LEB { LINK_STD(4, 1329) }
-	wan to DIL { LINK_STD(4, 660) }
+	wan to LEB //{ LINK_STD(4, 1329) }
+	wan to DIL //{ LINK_STD(4, 660) }
 }
 
 host WLF {
@@ -171,10 +171,10 @@ host WLF {
 	address = 190
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to SLS { LINK_STD(1, 570) }
-	wan to DIL { LINK_BAD(1, 380) }
-	wan to LED { LINK_BAD_K(256, 989) }
-	wan to SSB { LINK_STD(2, 610) }
+	wan to SLS //{ LINK_STD(1, 570) }
+	wan to DIL //{ LINK_BAD(1, 380) }
+	wan to LED //{ LINK_BAD_K(256, 989) }
+	wan to SSB //{ LINK_STD(2, 610) }
 }
 
 host LED {
@@ -182,8 +182,8 @@ host LED {
 	address = 191
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to WLF { LINK_BAD_K(256, 989) }
-	wan to IHN { LINK_BAD_K(256, 240) }
+	wan to WLF //{ LINK_BAD_K(256, 989) }
+	wan to IHN //{ LINK_BAD_K(256, 240) }
 }
 
 host IHN {
@@ -191,7 +191,7 @@ host IHN {
 	address = 192
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to LED { LINK_BAD_K(256, 240) }
+	wan to LED //{ LINK_BAD_K(256, 240) }
 }
 
 host SSB {
@@ -199,8 +199,8 @@ host SSB {
 	address = 193
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to WLF { LINK_STD(2, 610) }
-	wan to RLG { LINK_STD(2, 202) }
+	wan to WLF //{ LINK_STD(2, 610) }
+	wan to RLG //{ LINK_STD(2, 202) }
 }
 
 host RLG {
@@ -208,8 +208,8 @@ host RLG {
 	address = 194
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to SSB { LINK_STD(2, 202) }
-	wan to BEK { LINK_STD(2, 429) }
+	wan to SSB //{ LINK_STD(2, 202) }
+	wan to BEK //{ LINK_STD(2, 429) }
 }
 
 host BEK {
@@ -217,8 +217,8 @@ host BEK {
 	address = 195
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to RLG { LINK_STD(2, 429) }
-	wan to MZG { LINK_STD(2, 831) }
+	wan to RLG //{ LINK_STD(2, 429) }
+	wan to MZG //{ LINK_STD(2, 831) }
 }
 
 host EPB {
@@ -226,9 +226,9 @@ host EPB {
 	address = 151
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to LEB { LINK_STD(2, 590) }
-	wan to MRP { LINK_BAD(3, 935) }
-	wan to SUL { LINK_STD(1, 1735) }
+	wan to LEB //{ LINK_STD(2, 590) }
+	wan to MRP //{ LINK_BAD(3, 935) }
+	wan to SUL //{ LINK_STD(1, 1735) }
 }
 
 host MRP {
@@ -236,9 +236,9 @@ host MRP {
 	address = 152
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to EPB { LINK_BAD(3, 935) }
-	wan to WND { LINK_STD(2, 1164) }
-	wan to THY { LINK_STD(2, 565) }
+	wan to EPB //{ LINK_BAD(3, 935) }
+	wan to WND //{ LINK_STD(2, 1164) }
+	wan to THY //{ LINK_STD(2, 565) }
 }
 
 host MTL {
@@ -246,9 +246,9 @@ host MTL {
 	address = 204
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to MZG { LINK_STD(1, 838) }
-	wan to ORZ { LINK_STD(1, 857) }
-	wan to LSH { LINK_STD_K(512, 1408) }
+	wan to MZG //{ LINK_STD(1, 838) }
+	wan to ORZ //{ LINK_STD(1, 857) }
+	wan to LSH //{ LINK_STD_K(512, 1408) }
 }
 
 host ORZ {
@@ -256,8 +256,8 @@ host ORZ {
 	address = 203
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to MTL { LINK_STD(1, 857) }
-	wan to BRG { LINK_STD(1, 931) }
+	wan to MTL //{ LINK_STD(1, 857) }
+	wan to BRG //{ LINK_STD(1, 931) }
 }
 
 host BRG {
@@ -265,8 +265,8 @@ host BRG {
 	address = 202
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to ORZ { LINK_STD(1, 931) }
-	wan to PRL { LINK_GOOD_K(256, 563) }
+	wan to ORZ //{ LINK_STD(1, 931) }
+	wan to PRL //{ LINK_GOOD_K(256, 563) }
 }
 
 host PRL {
@@ -274,7 +274,7 @@ host PRL {
 	address = 201
 	messagerate = 75ms // ~ 0.2 Mbps
 
-	wan to BRG { LINK_GOOD_K(256, 563) }
+	wan to BRG //{ LINK_GOOD_K(256, 563) }
 }
 
 host THY {
@@ -282,8 +282,8 @@ host THY {
 	address = 161
 	messagerate = 60ms // ~ 0.3 Mbps
 
-	wan to MRP { LINK_STD(2, 565) }
-	wan to PRT { LINK_STD(1, 1040) }
+	wan to MRP //{ LINK_STD(2, 565) }
+	wan to PRT //{ LINK_STD(1, 1040) }
 }
 
 host PRT {
@@ -291,9 +291,9 @@ host PRT {
 	address = 162
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to THY { LINK_STD(1, 1040) }
-	wan to WDN { LINK_BAD(2, 971) }
-	wan to NNW { LINK_STD(1, 936) }
+	wan to THY //{ LINK_STD(1, 1040) }
+	wan to WDN //{ LINK_BAD(2, 971) }
+	wan to NNW //{ LINK_STD(1, 936) }
 }
 
 host SCH {
@@ -301,8 +301,8 @@ host SCH {
 	address = 163
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to LEB { LINK_STD(2, 800) }
-	wan to NUN { LINK_STD(2, 654) }
+	wan to LEB //{ LINK_STD(2, 800) }
+	wan to NUN //{ LINK_STD(2, 654) }
 }
 
 host NUN {
@@ -310,9 +310,9 @@ host NUN {
 	address = 164
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to SCH { LINK_STD(2, 654) }
-	wan to WDN { LINK_BAD(2, 872) }
-	wan to LSH { LINK_STD_K(256, 930) }
+	wan to SCH //{ LINK_STD(2, 654) }
+	wan to WDN //{ LINK_BAD(2, 872) }
+	wan to LSH //{ LINK_STD_K(256, 930) }
 }
 
 host WDN {
@@ -320,9 +320,9 @@ host WDN {
 	address = 165
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to NUN { LINK_BAD(2, 872) }
-	wan to PRT { LINK_BAD(2, 971) }
-	wan to LSH { LINK_BAD(2, 1286) }
+	wan to NUN //{ LINK_BAD(2, 872) }
+	wan to PRT //{ LINK_BAD(2, 971) }
+	wan to LSH //{ LINK_BAD(2, 1286) }
 }
 
 host LSH {
@@ -330,10 +330,10 @@ host LSH {
 	address = 167
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to WDN { LINK_BAD(2, 1286) }
-	wan to MTL { LINK_STD_K(512, 1408) }
-	wan to NUN { LINK_STD_K(256, 930) }
-	wan to MZG { LINK_STD_K(512, 1556) }
+	wan to WDN //{ LINK_BAD(2, 1286) }
+	wan to MTL //{ LINK_STD_K(512, 1408) }
+	wan to NUN //{ LINK_STD_K(256, 930) }
+	wan to MZG //{ LINK_STD_K(512, 1556) }
 }
 
 host SUL {
@@ -341,10 +341,10 @@ host SUL {
 	address = 135
 	messagerate = 60ms // ~ 0.3 Mbps
 
-	wan to SB { LINK_STD(2, 1165) }
-	wan to SPE { LINK_STD(1, 896) }
-	wan to EPB { LINK_STD(1, 1735) }
-	wan to OTW { LINK_BAD(1, 1780) }
+	wan to SB //{ LINK_STD(2, 1165) }
+	wan to SPE //{ LINK_STD(1, 896) }
+	wan to EPB //{ LINK_STD(1, 1735) }
+	wan to OTW //{ LINK_BAD(1, 1780) }
 }
 
 host SPE {
@@ -352,8 +352,8 @@ host SPE {
 	address = 136
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to SUL { LINK_STD(1, 896) }
-	wan to NK { LINK_STD(1, 597) }
+	wan to SUL //{ LINK_STD(1, 896) }
+	wan to NK //{ LINK_STD(1, 597) }
 }
 
 host OTW {
@@ -361,8 +361,8 @@ host OTW {
 	address = 137
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to SUL { LINK_BAD(1, 1780) }
-	wan to WND { LINK_BAD(1, 1031) }
+	wan to SUL //{ LINK_BAD(1, 1780) }
+	wan to WND //{ LINK_BAD(1, 1031) }
 }
 
 host NNW {
@@ -370,8 +370,8 @@ host NNW {
 	address = 168
 	messagerate = 60ms // ~ 0.3 Mbps
 
-	wan to PRT { LINK_STD(1, 936) }
-	wan to NOH { LINK_GOOD_K(512, 1803) }
+	wan to PRT //{ LINK_STD(1, 936) }
+	wan to NOH //{ LINK_GOOD_K(512, 1803) }
 }
 
 host NOH {
@@ -379,9 +379,9 @@ host NOH {
 	address = 169
 	messagerate = 60ms // ~ 0.3 Mbps
 
-	wan to NNW { LINK_GOOD_K(512, 1803) }
-	wan to NMB { LINK_GOOD_K(512, 736) }
-	wan to FRS { LINK_BAD_K(384, 1297) }
+	wan to NNW //{ LINK_GOOD_K(512, 1803) }
+	wan to NMB //{ LINK_GOOD_K(512, 736) }
+	wan to FRS //{ LINK_BAD_K(384, 1297) }
 }
 
 host NMB {
@@ -389,8 +389,8 @@ host NMB {
 	address = 159
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to NOH { LINK_GOOD_K(512, 736) }
-	wan to WND { LINK_STD(1, 857) }
+	wan to NOH //{ LINK_GOOD_K(512, 736) }
+	wan to WND //{ LINK_STD(1, 857) }
 }
 
 host FRS {
@@ -398,7 +398,7 @@ host FRS {
 	address = 158
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to NOH { LINK_BAD_K(384, 1297) }
+	wan to NOH //{ LINK_BAD_K(384, 1297) }
 }
 
 host BLK {
@@ -406,8 +406,8 @@ host BLK {
 	address = 132
 	messagerate = 30ms // ~ 0.6 Mbps
 
-	wan to IGB { LINK_STD(2, 1187) }
-	wan to GRH { LINK_STD(1, 1350) }
+	wan to IGB //{ LINK_STD(2, 1187) }
+	wan to GRH //{ LINK_STD(1, 1350) }
 }
 
 host GRH {
@@ -415,7 +415,7 @@ host GRH {
 	address = 131
 	messagerate = 80ms // ~ 0.2 Mbps
 
-	wan to BLK { LINK_STD(1, 1350) }
+	wan to BLK //{ LINK_STD(1, 1350) }
 }
 
 
