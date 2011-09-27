@@ -7,10 +7,7 @@
 #define PACKET_SIZE(p)      (PACKET_HEADER_SIZE + p.length)
 #define MAXHOPS             10
 
-//static char receiveBuffer[256][MAX_MESSAGE_SIZE];
-//static char *rb[256];
-//static size_t packet_length[256];
-NL_PACKET * lastPacket;
+NL_PACKET *lastPacket;
 static int mtu;
 
 extern void send_ack(NL_PACKET *p, int arrived_on_link,
