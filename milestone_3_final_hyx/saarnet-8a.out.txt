@@ -1,0 +1,229 @@
+packet generated, src = 158, des = 151, seqno = 0, send_length = 4148, checksum = 46030
+
+packet generated, src = 167, des = 162, seqno = 0, send_length = 4895, checksum = 48498
+ppacket generated, src = 167, des = 144, seqno = 0, send_length = 7749, checksum = 58092
+packet generated, src = 137, des = 203, seqno = 0, send_length = 897, checksum = 19404
+
+papacket generated, src = 167, des = 203, seqno = 0, send_length = 3395, checksum = 597
+
+ppacket generated, src = 204, des = 148, seqno = 0, send_length = 7007, checksum = 44221
+
+cket generated, src = 167, des = 147, seqno = 0, send_length = 272, checksum = 40831
+
+packet generated, src = 167, des = 168, seqno = 0, send_length = 1979, checksum = 27794
+
+ = 1522, checksum = 31800
+
+drop a packet at 143, src = 143, des = 144, seqno = 0
+
+packet generated, src = 143, des = 131, seqno = 0, send_length = 8975, checksum = 7391
+
+180
+
+packet generated, src = 137, des = 135, seqno = 0, send_lepacket generated, src = 201, dpackpacket generated, src = 136, des = 159, seqno = 0, send_length = 5338, checksum = 5198
+
+100
+
+ generated, src = 142, packet generated, src = 163, des = 142, seqno = 0, send_lengpacket generated, src = 142, des = 164, seqno = 0, send_length = 1040, checksum = 27019
+
+packet generated, src = 142, des = 132, seqno = 0, send_length = 467, checksum = 37973
+
+2packet generated, src = 193, des = 169, seqno = 0, send_length = 8361, checksum = 16581
+
+packet generated, src = 193, des = 159, seqno = 0, send_length = 7337, checksum = 32413
+
+
+packet generated, src = 191, des = 151, seqno = 0, send_length = 8495, checksum = 33834
+
+packet generated, src = 191, des = 184, seqno = 0, send_length = 5112, checksum = 12181
+
+ 2905, checksum = 29643packet generated, src = 151, des = 147, seqno = 0, send_length = 10049, checksum = 22590
+
+packet generated, src = 151, des = 142, seqno = 0, send_length = 3801, checksum = 42681
+
+
+4, seqno = 0, send_length = 4439, checksum = 30026
+
+drop a packet at 161, src = 161, des = 184, seqno = 0
+
+o = 0, send_length = 8320, checksum = 8073
+
+erated, src = 144, des = 204, seqno = 0, send_length = 4252, checksum = 24941
+
+, des = packet generated, src = 147, des = 182, seqno = 0, send_length = 5914, checksum = 49552
+
+packet generated, src = 147, des = 163, seqno = 0, send_length = 6957, checksum = 46072
+
+192, seqno = 0, send_length = 4846, checksum = 58915
+
+ngth = 5463, checksum = 25455
+
+packet generated, src = 145, des = 162, seqno = 0, send_length = 1304, checksum = 50085
+
+packet generated, src = 145, des = 192, seqno = 0, send_length = 7562, checksum = 29604
+
+packet generated, src = 145, des = 158, seqno = 0, send_length = 9980, checksum = 20621
+
+119
+
+packet generated, src = 132, des = 141, seqno = 0, send_length = 1735, checksum = 17032
+
+packet generated, src = 132, des = 143, seqno = 0, send_length = 4739, checksum = 38743
+
+packet generated, src = 132, des = 169, seqno = 0, send_length = 7499, checksum = 24959
+
+packet generated, src = 132, des = 145, seqno = 0, send_length = 4210, checksum = 10112
+
+packet generated, src = 132, des = 182, seqno = 0, send_length = 3672, checksum = 15916
+
+packet generated, src = 132, des = 148, seqno = 0, send_length = 3379, checksum = 30782
+
+packet generated, src = 132, des = 158, seqno = 0, send_length = 2330, checksum = 57879
+
+packet generated, src = 132, des = 185, seqno = 0, send_length = 1232, checksum = 61319
+
+packet generated, src = 132, des = 140, seqno = 0, send_length = 8319, checksum = 29326
+
+packet generated, src = 132, des = 151, seqno = 0, send_length = 2758, checksum = 57817
+
+packet generated, src = 132, des = 163, seqno = 0, send_length = 9175, checksum = 4687
+
+391, checksum = 44913
+
+packet generated, src = 185, des = 184, seqno = 0, send_length = 1163, checksum = 50732
+
+packet generated, src = 185, des = 131, seqno = 0, send_length = 6803, checksum = 40652
+
+packet generated, src = 185, des = 182, seqno = 0, send_length = 7513, checksum = 17091
+
+6, checksum = 7463
+
+packet generated, src = 184, des 160 received a packet, src = 152, des = 160, seqno = 0,  send_length = 7199,receive_length = 7199 
+last_piece_trans_time = 4014, hopcount = 1
+src_checksum = 58110 calc_checksum = 58110, correct packet
+
+rans_time = 2675, hopcount = 1
+s184 received a packet, src = 190, des = 184, seqno = 0,  send_length = 6966,receive_length = 6966 
+last_piece_trans_time = 16024, hopcount = 4
+src_checksum = 36041 calc_checksum = 36041, correct packet
+
+seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+packet generated, src = 134, des = 161, seqno = 0, send_length = 6885, checksum = 18085
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+packet generated, src = 134, des = 203, seqno = 0, send_length = 1452, checksum = 30261
+
+packet generated, src = 134, des = 160, seqno = 0, send_length = 7989, checksum = 27799
+
+packet generated, src = 134, des = 148, seqno = 0, send_length = 9810, checksum = 5463
+
+packet generated, src = 134, des = 145, seqno = 0, send_length = 9196, checksum = 7923
+
+packet generated, src = 134, des = 135, seqno = 0, send_length = 1367, checksum = 11718
+
+packet generated, src = 134, des = 132, seqno = 0, send_length = 7466, checksum = 26521
+
+packet generated, src = 134, des = 170, seqno = 0, send_length = 1122, checksum = 29180
+
+packet generated, src = 134, des = 136, seqno = 0, send_length = 1784, checksum = 50809
+
+packet generated, src = 134, des = 202, seqno = 0, send_length = 7370, checksum = 37054
+
+packet generated, src = 134, des = 152, seqno = 0, send_length = 1326, checksum = 454
+
+packet generated, src = 134, des = 137, seqno = 0, send_length = 5453, checksum = 17111
+
+packet generated, src = 134, des = 159, seqno = 0, send_length = 6279, checksum = 49078
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+packet generated, src = 134, des = 163, seqno = 0, send_length = 5908, checksum = 39568
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+packet generated, src = 134, des = 183, seqno = 0, send_length = 8678, checksum = 33897
+
+packet generated, src = 134, des = 144, seqno = 0, send_length = 4711, checksum = 33726
+
+packet generated, src = 134, des = 190, seqno = 0, send_length = 4933, checksum = 37729
+
+packet generated, src = 134, des = 184, seqno = 0, send_length = 4931, checksum = 46815
+
+packet generated, src = 134, des = 147, seqno = 0, send_length = 3617, checksum = 50489
+
+packet generated, src = 134, des = 141, seqno = 0, send_length = 6503, checksum = 21478
+
+packet generated, src = 134, des = 143, seqno = 0, send_length = 6261, checksum = 6696
+
+packet generated, src = 134, des = 142, seqno = 0, send_length = 6417, checksum = 35136
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+134 received a packet, src = 141, des = 134, seqno = 0,  send_length = 1529,receive_length = 1529 
+last_piece_trans_time = 4296, hopcount = 2
+src_checksum = 63671 calc_checksum = 63671, correct packet
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 162, seqno = 0
+
+drop a packet at 134, src = 134, des = 158, seqno = 0
+
