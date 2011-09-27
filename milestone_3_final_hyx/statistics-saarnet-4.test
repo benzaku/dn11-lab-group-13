@@ -1,0 +1,15 @@
+8 hosts, 0 routers, 0 mobiles, 0 accesspoints
+Simulation time                     : 15615029
+Events raised                       : 71780
+Messages generated                  : 4117
+Messages delivered                  : 4098
+Message bandwidth                   : 420539
+Average delivery time               : 97553
+Frames transmitted                  : 30961
+Frames received                     : 30953
+Efficiency (bytes AL) / (bytes PL)  : 33.68
+Transmission cost                   : 156944
+EV_REBOOT                           : 8
+EV_PHYSICALREADY                    : 30953
+EV_APPLICATIONREADY                 : 4117
+EV_TIMER1                           : 36702

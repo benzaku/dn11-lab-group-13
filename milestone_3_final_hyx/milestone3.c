@@ -8,7 +8,6 @@
 #include "dll_basic.c"
 #include "nl_packet.h"
 #include "milestone3.h"
-#include "receive_buffer.c"
 
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
@@ -147,34 +146,29 @@ static EVENT_HANDLER( down_to_network) {
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
-	printf("up to network\n");
 	NL_PACKET *p = (NL_PACKET *) packet;
 	if (p->src == nodeinfo.address) {
 		printf("drop a packet at %d, src = %d, des = %d, seqno = %d\n\n",
 				nodeinfo.address, p->src, p->dest, p->seqno);
 		return 0;
 	}
-	
 	//printf("up to network at %d (from %d to %d)\n", nodeinfo.address, p->src, p->dest);
 	++p->hopcount; /* took 1 hop to get here */
 	mtu = linkinfo[arrived_on_link].mtu;
 	p->trans_time += ((CnetTime) 8000 * 1000 * mtu
 			/ linkinfo[arrived_on_link].bandwidth
 			+ linkinfo[arrived_on_link].propagationdelay) * 100 / mtu;
-	
+	////("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
 		switch (p->kind) {
 		case NL_DATA:
 			if (p->seqno == NL_packetexpected(p->src)) {
-				//length = p->length;
-				//memcpy(rb[p->src], (char *) p->msg, length);
-				//rb[p->src] = rb[p->src] + length;
+				length = p->length;
+				memcpy(rb[p->src], (char *) p->msg, length);
+				rb[p->src] = rb[p->src] + length;
 				//packet_length[p->src] += length;
-				RB_save_msg(p);
-				
 				if (p->pieceEnd) {
-					RB_copy_whole_msg(p);
 					up_to_application(p, arrived_on_link);
 					return 0;
 				}
@@ -218,7 +212,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			}
 			printf("\n");
 			break;
-			
 		case NL_ERR_ACK_RESENT:
 			printf("NL_ERR_ACK_RESENT!\n");
 			if (p->seqno == NL_ackexpected(p->src)) {
@@ -249,17 +242,13 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
-			//length = p->length;
-			//memcpy(rb[p->src], (char *) p->msg, length);
-			//rb[p->src] = rb[p->src] + length;
-			RB_save_msg(p);
-			
+			length = p->length;
+			memcpy(rb[p->src], (char *) p->msg, length);
+			rb[p->src] = rb[p->src] + length;
 			if (p->pieceEnd)
-				RB_copy_whole_msg(p);
 				route_packet(p, arrived_on_link);
-		} else {/* silently drop */;
-		
-		}
+		} else
+			/* silently drop */;
 	}
 	return 0;
 }
@@ -270,16 +259,16 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
 	int p_checksum = p->checksum;
-	int checksum = CNET_ccitt((unsigned char *) (p->msg),
+	int checksum = CNET_ccitt((unsigned char *) (receiveBuffer[p->src]),
 			p->src_packet_length);
 	if (p->is_resent) {
 		printf(
-				"%d received a resent packet, src = %d, des = %d, seqno = %d, send_length = %d, receive_length = %d \n",
+				"%d received a resent packet, src = %d, des = %d, seqno = %d,  send_length = %d,receive_length = %d \n",
 				nodeinfo.address, p->src, p->dest, p->seqno,
 				p->src_packet_length, length);
 	} else {
 		printf(
-				"%d received a packet, src = %d, des = %d, seqno = %d, send_length = %d, receive_length = %d \n",
+				"%d received a packet, src = %d, des = %d, seqno = %d,  send_length = %d,receive_length = %d \n",
 				nodeinfo.address, p->src, p->dest, p->seqno,
 				p->src_packet_length, length);
 	}
@@ -289,7 +278,7 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	if (p_checksum != checksum) {
 		send_ack(p, arrived_on_link, 1);
 	} else { // received a correct packet
-		CHECK(CNET_write_application(p->msg, &length));
+		CHECK(CNET_write_application(receiveBuffer[p->src], &length));
 		send_ack(p, arrived_on_link, 0);
 	}
 }
@@ -313,10 +302,9 @@ void route_packet(NL_PACKET *p, int arrived_on_link) {
 	wholePacket.checksum = p->checksum;
 	wholePacket.trans_time = p->trans_time;
 	wholePacket.is_resent = p->is_resent;
-	RB_copy_whole_msg(&wholePacket);
 
-	//memcpy(wholePacket.msg, receiveBuffer[p->src], length);
-	//rb[p->src] = &receiveBuffer[p->src][0];
+	memcpy(wholePacket.msg, receiveBuffer[p->src], length);
+	rb[p->src] = &receiveBuffer[p->src][0];
 
 	flood((char *) &wholePacket, PACKET_SIZE(wholePacket), 0, arrived_on_link);
 }
@@ -338,8 +326,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) 
 		p->kind = NL_ACK;
 		flood((char *) p, PACKET_HEADER_SIZE, arrived_on_link, 0);
 	}
-	//rb[p->src] = &receiveBuffer[p->src][0];
-	
+	rb[p->src] = &receiveBuffer[p->src][0];
 
 	/* actually we just need to set p->length to 0 */
 	p->hopcount = 0;
@@ -350,9 +337,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) 
 	p->checksum = 0;
 	p->trans_time = 0;
 	p->is_resent = 0;
-	//RB_copy_whole_msg(p);
 	memset(&p->msg, 0, MAX_MESSAGE_SIZE * sizeof(char));
-	
 
 	tmpaddr = p->src; /* swap src and dest addresses */
 	p->src = p->dest;
@@ -389,11 +374,11 @@ EVENT_HANDLER( reboot_node) {
 	if (nodeinfo.nlinks > 32) {
 		exit(1);
 	}
-	/*
+
 	for (int i = 0; i <= 255; i++) {
 		rb[i] = receiveBuffer[i];
 		//packet_length[i] = 0;
-	}*/
+	}
 
 	//memset(packet_length, 0, 256*sizeof(size_t));
 	reboot_DLL();
