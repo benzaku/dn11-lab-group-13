@@ -161,8 +161,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			/ linkinfo[arrived_on_link].bandwidth
 			+ linkinfo[arrived_on_link].propagationdelay) * 100 / mtu;
 	
-	RB_assemble_msg(p);
-	
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
 		switch (p->kind) {
@@ -171,11 +169,11 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				//length = p->length;
 				//memcpy(rb[p->src], (char *) p->msg, length);
 				//rb[p->src] = rb[p->src] + length;
-				p->msg = RB_save_msg(p);
 				//packet_length[p->src] += length;
+				RB_save_msg(p);
 				
 				if (p->pieceEnd) {
-					p->msg = RB_get_whole_msg(p);
+					RB_copy_whole_msg(p);
 					up_to_application(p, arrived_on_link);
 					return 0;
 				}
@@ -253,12 +251,14 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			//length = p->length;
 			//memcpy(rb[p->src], (char *) p->msg, length);
 			//rb[p->src] = rb[p->src] + length;
-			p->msg = RB_save_msg(p);
+			RB_save_msg(p);
+			
 			if (p->pieceEnd)
-				p->msg = RB_get_whole_msg(p);
+				RB_copy_whole_msg(p);
 				route_packet(p, arrived_on_link);
-		} else
-			/* silently drop */;
+		} else {/* silently drop */;
+		
+		}
 	}
 	return 0;
 }
@@ -269,7 +269,7 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
 	int p_checksum = p->checksum;
-	int checksum = CNET_ccitt((unsigned char *) (receiveBuffer[p->src]),
+	int checksum = CNET_ccitt((unsigned char *) (p->msg),
 			p->src_packet_length);
 	if (p->is_resent) {
 		printf(
@@ -288,7 +288,7 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	if (p_checksum != checksum) {
 		send_ack(p, arrived_on_link, 1);
 	} else { // received a correct packet
-		CHECK(CNET_write_application(receiveBuffer[p->src], &length));
+		CHECK(CNET_write_application(p->msg, &length));
 		send_ack(p, arrived_on_link, 0);
 	}
 }
@@ -312,8 +312,9 @@ void route_packet(NL_PACKET *p, int arrived_on_link) {
 	wholePacket.checksum = p->checksum;
 	wholePacket.trans_time = p->trans_time;
 	wholePacket.is_resent = p->is_resent;
+	RB_copy_whole_msg(&wholePacket);
 
-	memcpy(wholePacket.msg, RB_get_whole_msg(p->src, p->dest, p->seqno), length);
+	//memcpy(wholePacket.msg, receiveBuffer[p->src], length);
 	//rb[p->src] = &receiveBuffer[p->src][0];
 
 	flood((char *) &wholePacket, PACKET_SIZE(wholePacket), 0, arrived_on_link);
@@ -385,11 +386,11 @@ EVENT_HANDLER( reboot_node) {
 	if (nodeinfo.nlinks > 32) {
 		exit(1);
 	}
-
+	/*
 	for (int i = 0; i <= 255; i++) {
 		rb[i] = receiveBuffer[i];
 		//packet_length[i] = 0;
-	}
+	}*/
 
 	//memset(packet_length, 0, 256*sizeof(size_t));
 	reboot_DLL();
