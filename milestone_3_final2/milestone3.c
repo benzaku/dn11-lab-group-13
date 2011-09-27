@@ -10,6 +10,7 @@
 #include "milestone3.h"
 #include "receive_buffer.c"
 
+
 /*  This file implements a much better flooding algorithm than those in
  both flooding1.c and flooding2.c. As Network Layer packets are processed,
  the information in their headers is used to update the NL table.
@@ -31,6 +32,7 @@
  */
 
 // here the second parameter is the length of msg of packet!
+
 
 
 void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
@@ -350,7 +352,6 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) 
 	p->checksum = 0;
 	p->trans_time = 0;
 	p->is_resent = 0;
-	//RB_copy_whole_msg(p);
 	memset(&p->msg, 0, MAX_MESSAGE_SIZE * sizeof(char));
 	
 
