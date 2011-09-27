@@ -31,7 +31,7 @@ void RB_save_msg (NL_PACKET *p){
     temp = malloc(RB_ELEM_SIZE);
     temp->id = id;
     temp->length = p->length;
-    memcpy(&temp->msg[temp->length], (char *) p->msg, p->length);
+    memcpy(temp->msg, (char *) p->msg, p->length);
     vector_append(rb, temp, RB_ELEM_SIZE);
     temp = vector_peek(rb, 0, &RB_ELEM_SIZE); // debug
     printf("vector empty: msg saved at vector[%d], msg_id= %d, msg_length = %d\n", 0, temp->id, temp->length);
@@ -57,7 +57,7 @@ void RB_save_msg (NL_PACKET *p){
 	temp = malloc(RB_ELEM_SIZE);
 	temp->id = RB_get_id(p);
 	temp->length = p->length;
-	memcpy(&temp->msg[temp->length], (char *) p->msg, p->length);
+	memcpy(temp, (char *) p->msg, p->length);
 	vector_append(rb, temp, RB_ELEM_SIZE);
 	temp = vector_peek(rb, i, &RB_ELEM_SIZE); // debug
 	printf("create new elem: msg saved at vector[%d], msg_id= %d, msg_length = %d\n", i, temp->id, temp->length);
@@ -81,9 +81,9 @@ void RB_copy_whole_msg(NL_PACKET *p){
       temp = vector_remove(rb, i, &RB_ELEM_SIZE);
       printf("msg removed from vector[%d], msg_id= %d, msg_length = %d\n", i, temp->id, temp->length);
       //free(temp->msg);
-      free(temp);
-      temp = NULL;
-      printf("memory free\n");
+      //free(temp);
+      //temp = NULL;
+      //printf("memory free\n");
       break;
     }
   }
