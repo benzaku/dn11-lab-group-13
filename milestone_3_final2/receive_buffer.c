@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "nl_packet.h"
 
 typedef struct {
@@ -11,17 +14,17 @@ struct BUF_NODE {
   struct BUF_NODE *next;
 };
 
-static struct BUF_NODE *rb = NULL;
-
 unsigned int get_id (NL_PACKET *p){
   return ((unsigned int) (p->src) * 10000000 + (unsigned int) (p->dest) * 10000 + (unsigned int) p->seqno);
 }
 
-void RB_save_msg (NL_PACKET *p){
+void RB_save_msg (struct BUF_NODE *rb, NL_PACKET *p){
+   printf("RB_save_msg\n");
+   unsigned int id = get_id(p);
   /* UINT_MAX = +4,294,967,295 */
-  unsigned int id = get_id(p);
-  printf("RB_save_msg\n");
-  if (rb == NULL) {
+
+  if (!rb) {
+    printf("if");
     rb = malloc(sizeof(struct BUF_NODE));
     rb->data->id = id;
     memcpy(&rb->data->msg[0], (char *) p->msg, p->length);
@@ -30,6 +33,7 @@ void RB_save_msg (NL_PACKET *p){
     printf("receive buffer initialized, node_id = %d\n\n", rb->data->id);
   } 
   else {
+    printf("else");
     struct BUF_NODE *temp = rb;
     while (temp->next != NULL){
       if(temp->data->id == id){
@@ -59,11 +63,10 @@ void RB_save_msg (NL_PACKET *p){
   }
 }
 
-void RB_copy_whole_msg(NL_PACKET *p){
+void RB_copy_whole_msg(struct BUF_NODE *rb, NL_PACKET *p){
   printf("RB_copy_whole_msg\n");
   /* UINT_MAX = +4,294,967,295 */
   unsigned int id = get_id(p);
-  
   struct BUF_NODE *temp = rb;
   if(temp->data->id == id){
     memcpy(p->msg, temp->data->msg, temp->data->length);
@@ -89,4 +92,26 @@ void RB_copy_whole_msg(NL_PACKET *p){
       }
     }
   }
+}
+
+void main(){
+ NL_PACKET *p = malloc(sizeof(NL_PACKET));
+ p->src = 134;
+ p->dest = 96;
+ p->kind = NL_ACK;
+ p->seqno = 0;
+ p->hopcount = 2;
+ p->pieceNumber = 2;
+ p->pieceEnd = 1;
+ p->length = 10;
+ p->src_packet_length = 10;
+ p->checksum = 1043413;
+ p->trans_time = 10;
+ p->is_resent = 0;
+ memcpy(&p->msg, "hello hao!", 10);
+ int i;
+ printf("msg: %s\n\n", p->msg);
+ struct BUF_NODE rb;
+ for(i=0; i<10;i++)
+    RB_save_msg(&rb, p);
 }
