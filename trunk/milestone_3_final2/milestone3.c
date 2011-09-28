@@ -260,6 +260,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			  RB_save_msg(p);
 			  if (p->pieceEnd){
 				RB_copy_whole_msg(p);
+				printf("p->length after copy = %d\n", p->length);
 				route_packet(p, arrived_on_link);
 			  }
 			}

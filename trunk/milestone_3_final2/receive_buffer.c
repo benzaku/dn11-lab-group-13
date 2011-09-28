@@ -9,7 +9,7 @@ typedef struct {
 } RB_BUF_ELEM;
 
 size_t RB_ELEM_SIZE = sizeof(RB_BUF_ELEM);
-VECTOR rb;//receive buffer
+static VECTOR rb;//receive buffer
 
 unsigned int RB_get_id(NL_PACKET *p) {
 	return ((unsigned int) (p->src) * 10000000 + (unsigned int) (p->dest)
@@ -37,15 +37,19 @@ void RB_save_msg(NL_PACKET *p) {
 		//memcpy(temp->msg, (char *) p->msg, p->length);
 		bufelem.id = id;
 		bufelem.length = p->length;
-		memcpy((char *) (&bufelem.msg), (char *) p->msg, p->length);
+		memcpy((char *) (&bufelem.msg[0]), (char *) p->msg, p->length);
 		vector_append(rb, &bufelem, RB_ELEM_SIZE);
+		printf("ok1\n");
 		//temp = vector_peek(rb, 0, &RB_ELEM_SIZE); // debug
 		//printf("vector empty: msg saved at vector[%d], msg_id= %d, msg_length = %d\n", 0, temp->id, temp->length);
 	} else {
 		for (i = 0; i < n; i++) {
 			temp = vector_peek(rb, i, &RB_ELEM_SIZE);
+			if(temp == NULL)
+				printf("temp = NULL\n");
 			if (temp->id == id) {
 				//backup to new elem because of vector_replace
+				printf("ok1\n");
 				RB_BUF_ELEM elem;
 				elem.id = id;
 				elem.length = temp->length;
@@ -58,6 +62,7 @@ void RB_save_msg(NL_PACKET *p) {
 				printf(
 						"elem found: msg saved at vector[%d], msg_id= %d, msg_length = %d\n",
 						i, temp->id, temp->length);
+				printf("p->isend = %d", p->pieceEnd);
 				break;
 			}
 		}
@@ -91,6 +96,7 @@ void RB_copy_whole_msg(NL_PACKET *p) {
 		temp = vector_peek(rb, i, &RB_ELEM_SIZE);
 		if (temp->id == id) {
 			memcpy(p->msg, temp->msg, temp->length);
+			printf("temp->length = %d\n", temp->length);
 			temp = vector_remove(rb, i, &RB_ELEM_SIZE);
 			printf(
 					"msg removed from vector[%d], msg_id= %d, msg_length = %d\n",
