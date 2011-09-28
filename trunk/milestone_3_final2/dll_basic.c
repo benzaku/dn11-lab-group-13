@@ -84,6 +84,7 @@ static EVENT_HANDLER( up_to_datalink) {
 	CHECK(up_to_network(f.packet, length, link));
 }
 
+
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	////("timeouts\n");
 	//extern void print_msg(char *, size_t);
@@ -119,6 +120,7 @@ void reboot_DLL(void) {
 	//CnetTime timeout;
 	CHECK(CNET_set_handler(EV_PHYSICALREADY, up_to_datalink, 0));
 	CHECK(CNET_set_handler(EV_TIMER1, timeouts, 0));
+
 	initQueue(&buf);
 	////("buf init size = %d\n", buf.size);
 
@@ -129,6 +131,7 @@ void reboot_DLL(void) {
 
 	timeout = 1000;
 	lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
+
 
 	/* NOTHING ELSE TO DO! */
 }
