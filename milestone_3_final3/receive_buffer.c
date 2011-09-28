@@ -162,17 +162,20 @@ void RB_save_msg_link(NL_PACKET *p, int arrive_on_link) {
 				memcpy(&elem.msg, &temp->msg, elem.length);
 				printf("1. p->length = %d\n", p->length);
 				memcpy(&elem.msg[elem.length], (char *) p->msg, p->length);
-
 				elem.length += p->length;
+				vector_replace(rb, i, &elem, RB_ELEM_SIZE);
+				/* begin debug */
+				/*
 				printf("1.25. p->pieceno = %d\n", p->pieceNumber);
 				printf("1.5. p->src_packet_length = %d\n", p->src_packet_length);
 				printf("2. p->length = %d\n", p->length);
-				vector_replace(rb, i, &elem, RB_ELEM_SIZE);
 				temp = vector_peek(rb, i, &RB_ELEM_SIZE); // debug
 				printf(
 						"elem found: msg saved at vector[%d], msg_id= %d, msg_length = %d\n",
 						i, temp->id, temp->length);
 				printf("p->isend = %d", p->pieceEnd);
+				*/
+				/* end debug */
 				break;
 			}
 		}
@@ -214,32 +217,29 @@ void RB_copy_whole_msg_link(NL_PACKET *p, int arrive_on_link) {
 	int i;
 	int n = vector_nitems(rb);
 	for (i = 0; i < n; i++) {
-		printf("hi1\n");
 		RB_BUF_ELEM *temp;
-		printf("hi2\n");
 		temp = vector_peek(rb, i, &RB_ELEM_SIZE);
-		printf("hi3\n");
 		if (temp->id == id) {
-			printf("hi4\n");
 			memcpy(p->msg, temp->msg, temp->length);
 			//p->length = temp->length;
+			/*
 			printf("hi5\n");
 			printf("p->length = %d\n", p->length);
 			printf("hi6\n");
 			printf("temp->length = %d\n", temp->length);
 			printf("hi7\n");
-			size_t aaa;
-			temp = vector_remove(rb, i, &aaa);
-			printf("hi8\n");
+			*/
+			temp = vector_remove(rb, i, &RB_ELEM_SIZE);
+			//printf("hi8\n");
 			printf(
 					"msg removed from vector[%d], msg_id= %d, msg_length = %d\n",
 					i, temp->id, temp->length);
-			printf("hi9\n");
+			//printf("hi9\n");
 			free(temp);
 			printf("hi10\n");
 			return;
 		} else {
-			printf("NONONONO\n");
+			//printf("NONONONO\n");
 		}
 	}
 	printf("\n");
