@@ -149,7 +149,7 @@ static EVENT_HANDLER( down_to_network) {
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
-	printf("up to network at hop %d\n", nodeinfo.address);
+	//printf("up to network at hop %d\n", nodeinfo.address);
 	NL_PACKET *p = (NL_PACKET *) packet;
 	if (p->src == nodeinfo.address) {
 		printf("drop a packet at %d, src = %d, des = %d, seqno = %d\n\n",
@@ -271,6 +271,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 }
 
 void up_to_application(NL_PACKET *p, int arrived_on_link) {
+	//debug
 	size_t length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
 			- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
@@ -301,30 +302,19 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 }
 
 void route_packet(NL_PACKET *p, int arrived_on_link) {
-	size_t length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-			- PACKET_HEADER_SIZE) + p->length;
+	//size_t length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
+	//		- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
 	NL_savehopcount(p->src, p->trans_time, arrived_on_link);
-	NL_PACKET wholePacket;
-	wholePacket.src = p->src;
-	wholePacket.dest = p->dest;
-	wholePacket.kind = p->kind;
-	wholePacket.seqno = p->seqno;
-	wholePacket.hopcount = p->hopcount;
-	wholePacket.pieceNumber = 0;
-	wholePacket.pieceEnd = 0;
-	wholePacket.length = length;
-	wholePacket.src_packet_length = p->src_packet_length;
-	wholePacket.checksum = p->checksum;
-	wholePacket.trans_time = p->trans_time;
-	wholePacket.is_resent = p->is_resent;
-	RB_copy_whole_msg(&wholePacket);
+	p->pieceNumber = 0;
+	p->pieceEnd = 0;
+	p->length = p->src_packet_length;
 
 	//memcpy(wholePacket.msg, receiveBuffer[p->src], length);
 	//rb[p->src] = &receiveBuffer[p->src][0];
 
-	flood((char *) &wholePacket, PACKET_SIZE(wholePacket), 0, arrived_on_link);
+	flood((char *) p, p->length+PACKET_HEADER_SIZE, 0, arrived_on_link);
 }
 
 void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int is_err_ack) {
