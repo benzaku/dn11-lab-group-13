@@ -173,10 +173,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				//memcpy(rb[p->src], (char *) p->msg, length);
 				//rb[p->src] = rb[p->src] + length;
 				//packet_length[p->src] += length;
-				RB_save_msg(p);
+				RB_save_msg_link(p, arrived_on_link);
 				
 				if (p->pieceEnd) {
-					RB_copy_whole_msg(p);
+					RB_copy_whole_msg_link(p, arrived_on_link);
 					up_to_application(p, arrived_on_link);
 					return 0;
 				}
@@ -257,11 +257,15 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			if(p->kind != NL_DATA){
 			  route_packet(p, arrived_on_link);
 			} else{
-			  RB_save_msg(p);
+			  RB_save_msg_link(p, arrived_on_link);
+			  printf("finish new rb save msg\n");
 			  if (p->pieceEnd){
-				RB_copy_whole_msg(p);
+
+				RB_copy_whole_msg_link(p, arrived_on_link);
+				printf("finish copy whole msg\n");
 				printf("p->length after copy = %d\n", p->length);
 				route_packet(p, arrived_on_link);
+
 			  }
 			}
 		} else {/* silently drop */;
