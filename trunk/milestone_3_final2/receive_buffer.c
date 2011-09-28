@@ -212,6 +212,7 @@ void RB_copy_whole_msg_link(NL_PACKET *p, int arrive_on_link) {
 			p->dest, p->seqno);
 
 	unsigned int id = RB_get_id_link(p,arrive_on_link);
+	unsigned int hashPart = id / 100;
 	printf("calc_id = %d\n", id);
 	int i;
 	int n = vector_nitems(rb);
@@ -227,7 +228,7 @@ void RB_copy_whole_msg_link(NL_PACKET *p, int arrive_on_link) {
 			--n;
 			continue;
 		}
-		if(((unsigned int)(temp->id)/100) == (unsigned int)(id/100)){
+		if(temp->id/100 == hashPart){
 			size_t aa;
 			temp = vector_remove(rb, i, &aa);
 			free(temp);
