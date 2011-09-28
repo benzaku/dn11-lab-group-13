@@ -21,6 +21,8 @@ unsigned int RB_get_id_link(NL_PACKET *p, int arrive_on_link){
 	return (unsigned int) 100 * hashPart + (unsigned int) arrive_on_link;
 }
 
+
+
 void RB_init() {
 	rb = vector_new();
 }
@@ -214,38 +216,33 @@ void RB_copy_whole_msg_link(NL_PACKET *p, int arrive_on_link) {
 	int i;
 	int n = vector_nitems(rb);
 	for (i = 0; i < n; i++) {
-		printf("hi1\n");
 		RB_BUF_ELEM *temp;
-		printf("hi2\n");
 		temp = vector_peek(rb, i, &RB_ELEM_SIZE);
-		printf("hi3\n");
 		if (temp->id == id) {
-			printf("hi4\n");
 			memcpy(p->msg, temp->msg, temp->length);
-			//p->length = temp->length;
-			printf("hi5\n");
-			printf("p->length = %d\n", p->length);
-			printf("hi6\n");
-			printf("temp->length = %d\n", temp->length);
-			printf("hi7\n");
 			size_t aaa;
 			temp = vector_remove(rb, i, &aaa);
-			printf("hi8\n");
-			printf(
-					"msg removed from vector[%d], msg_id= %d, msg_length = %d\n",
-					i, temp->id, temp->length);
-			printf("hi9\n");
 			free(temp);
-			printf("hi10\n");
-			return;
-		} else {
-			printf("NONONONO\n");
+			--i;
+			--n;
+			continue;
 		}
+		if(((unsigned int)(temp->id)/100) == (unsigned int)(id/100)){
+			size_t aa;
+			temp = vector_remove(rb, i, &aa);
+			free(temp);
+			--i;
+			--n;
+			continue;
+		}
+
 	}
+	//n = vector_nitems(rb);
+
 	printf("\n");
 }
 
-
+/*
 void RB_copy_whole_msg(NL_PACKET *p) {
 	printf("RB_copy_whole_msg\n");
 	printf("packet to be removed: src = %d, des = %d, seqno = %d\n", p->src,
@@ -270,6 +267,7 @@ void RB_copy_whole_msg(NL_PACKET *p) {
 			printf("hi6\n");
 			printf("temp->length = %d\n", temp->length);
 			printf("hi7\n");
+
 			size_t aaa;
 			for(i = 0; i< n; i++){
 			  temp = vector_peek(rb, i, &RB_ELEM_SIZE);
@@ -290,3 +288,4 @@ void RB_copy_whole_msg(NL_PACKET *p) {
 	}
 	printf("\n");
 }
+*/
