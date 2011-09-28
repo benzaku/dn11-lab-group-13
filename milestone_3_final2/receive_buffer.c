@@ -271,7 +271,11 @@ void RB_copy_whole_msg(NL_PACKET *p) {
 			printf("temp->length = %d\n", temp->length);
 			printf("hi7\n");
 			size_t aaa;
-			temp = vector_remove(rb, i, &aaa);
+			for(i = 0; i< n; i++){
+			  temp = vector_peek(rb, i, &RB_ELEM_SIZE);
+			  if(temp->id / 100 == hashPart)
+			    temp = vector_remove(rb, i, &aaa);
+			}
 			printf("hi8\n");
 			printf(
 					"msg removed from vector[%d], msg_id= %d, msg_length = %d\n",
