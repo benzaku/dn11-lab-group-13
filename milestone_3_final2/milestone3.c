@@ -58,11 +58,12 @@ void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 	piecePacket.checksum = tempPacket->checksum;
 	piecePacket.trans_time = tempPacket->trans_time;
 	piecePacket.is_resent = tempPacket->is_resent;
-
+	piecePacket.piece_checksum = tempPacket->piece_checksum;
 	while (tempLength > maxPacketLength) {
 		//printf("packet remains %d  bytes\n", tempLength);
 		piecePacket.length = maxPacketLength;
 		memcpy(piecePacket.msg, str, maxPacketLength);
+		piecePacket.piece_checksum = CNET_crc32((unsigned char *) (piecePacket.msg), piecePacket.length);
 
 		CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
 				PACKET_SIZE(piecePacket)));
@@ -75,9 +76,12 @@ void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 
 	piecePacket.pieceEnd = 1;
 	piecePacket.length = tempLength;
+	piecePacket.piece_checksum = CNET_crc32((unsigned char *) (piecePacket.msg), piecePacket.length);
 	//printf("last piece contains %d  bytes, pieceNumber = %d\n\n", tempLength ,piecePacket.pieceNumber);
 
 	memcpy(piecePacket.msg, str, tempLength);
+	piecePacket.piece_checksum = CNET_crc32((unsigned char *) (piecePacket.msg), piecePacket.length);
+
 	////("Required link is provided link = %d\n", choose_link);
 	CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
 			PACKET_SIZE(piecePacket)));
@@ -133,6 +137,7 @@ static EVENT_HANDLER( down_to_network) {
 	p.src_packet_length = (int) p.length;
 	//p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.src_packet_length);
 	p.checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
+	p.piece_checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
 	p.trans_time = 0;
 	p.is_resent = 0;
 
@@ -192,7 +197,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				//memcpy(rb[p->src], (char *) p->msg, length);
 				//rb[p->src] = rb[p->src] + length;
 				//packet_length[p->src] += length;
-				RB_save_msg_link(rb, p, arrived_on_link);
+				if(RB_save_msg_link(rb, p, arrived_on_link) == 0)
+					return 0;
 
 				if (p->pieceEnd) {
 					RB_copy_whole_msg_link(rb, p, arrived_on_link);
@@ -317,7 +323,11 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 			- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
+	if(length != p->src_packet_length)
+			return;
 	uint32_t p_checksum = p->checksum;
+
+	//fprintf(stdout, "length = %d\n", (int) p->src_packet_length);
 	uint32_t checksum = CNET_crc32((unsigned char *) (p->msg), p->src_packet_length);
 
 	/*
