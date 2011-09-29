@@ -17,6 +17,7 @@ typedef struct {
 	size_t length; /* the length of the msg portion only */
 	size_t src_packet_length; /* dont change during routing */
 	uint32_t checksum;
+	uint32_t piece_checksum;
 	unsigned int trans_time;
 	unsigned short int is_resent;
 
