@@ -26,9 +26,9 @@ void RB_init(VECTOR rb) {
 	rb = vector_new();
 }
 
-void RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
+int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	if(p->length > MAX_MESSAGE_SIZE || p->length <= 0)
-	  return;
+	  return 0;
 	/*
 	printf("RB_save_msg\n");
 	printf("packet to be saved: src = %d, des = %d, seqno = %d\n, current = %d ", p->src,
@@ -49,17 +49,18 @@ void RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 		  bufelem.length = p->length;
 		  memcpy(bufelem.msg, (char *) p->msg, p->length);
 		  vector_append(rb, &bufelem, RB_ELEM_SIZE);
+		  return 1;
 	} else {
 		for (i = 0; i < n; i++) {
 			temp = vector_peek(rb, i, &RB_ELEM_SIZE);
-			if (temp == NULL)
-				printf("temp = NULL\n");
 			if (temp->id == id) {
 				//backup to new elem because of vector_replace
 				if(temp->length + p->length <= MAX_MESSAGE_SIZE){
 				  memcpy(&temp->msg[temp->length], (char *) p->msg, p->length);
 				  temp->length += p->length;
-				  
+				  return 1;
+				} else {
+				  return 0;
 				}
 				/*
 				RB_BUF_ELEM elem;
@@ -89,6 +90,7 @@ void RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 			  vector_append(rb, &tempelem, RB_ELEM_SIZE);
 		}
 	}
+	return 1;
 	//printf("\n");
 }
 
