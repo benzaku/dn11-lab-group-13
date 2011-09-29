@@ -22,11 +22,11 @@ unsigned int RB_get_id_link(NL_PACKET *p, int arrive_on_link){
 
 
 
-void RB_init(VECTOR *rb) {
+void RB_init(VECTOR rb) {
 	rb = vector_new();
 }
 
-void RB_save_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
+void RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	/*
 	printf("RB_save_msg\n");
 	printf("packet to be saved: src = %d, des = %d, seqno = %d\n, current = %d ", p->src,
@@ -43,10 +43,12 @@ void RB_save_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
 		//temp->id = id;
 		//temp->length = p->length;
 		//memcpy(temp->msg, (char *) p->msg, p->length);
-		bufelem.id = id;
-		bufelem.length = p->length;
-		memcpy(bufelem.msg, (char *) p->msg, p->length);
-		vector_append(rb, &bufelem, RB_ELEM_SIZE);
+		if(p->length <= MAX_MESSAGE_SIZE){
+		  bufelem.id = id;
+		  bufelem.length = p->length;
+		  memcpy(bufelem.msg, (char *) p->msg, p->length);
+		  vector_append(rb, &bufelem, RB_ELEM_SIZE);
+		}
 	} else {
 		for (i = 0; i < n; i++) {
 			temp = vector_peek(rb, i, &RB_ELEM_SIZE);
@@ -54,8 +56,11 @@ void RB_save_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
 				printf("temp = NULL\n");
 			if (temp->id == id) {
 				//backup to new elem because of vector_replace
-				memcpy(&temp->msg[temp->length], (char *) p->msg, p->length);
-				temp->length += p->length;
+				if(temp->length + p->length <= MAX_MESSAGE_SIZE){
+				  memcpy(&temp->msg[temp->length], (char *) p->msg, p->length);
+				  temp->length += p->length;
+				  
+				}
 				/*
 				RB_BUF_ELEM elem;
 				elem.id = id;
@@ -77,17 +82,19 @@ void RB_save_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
 			}
 		}
 		if (i == n) {
-			RB_BUF_ELEM tempelem;
-			tempelem.id = RB_get_id_link(p, arrive_on_link);
-			tempelem.length = p->length;
-			memcpy(tempelem.msg, (char *) p->msg, p->length);
-			vector_append(rb, &tempelem, RB_ELEM_SIZE);
+			if(p->length <= MAX_MESSAGE_SIZE){
+			  RB_BUF_ELEM tempelem;
+			  tempelem.id = RB_get_id_link(p, arrive_on_link);
+			  tempelem.length = p->length;
+			  memcpy(tempelem.msg, (char *) p->msg, p->length);
+			  vector_append(rb, &tempelem, RB_ELEM_SIZE);
+			}
 		}
 	}
 	//printf("\n");
 }
 
-void RB_copy_whole_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
+void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	/*
 	printf("RB_copy_whole_msg\n");
 	printf("packet to be removed: src = %d, des = %d, seqno = %d\n, current = %d ", p->src,
