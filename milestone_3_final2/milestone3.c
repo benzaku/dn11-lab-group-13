@@ -35,12 +35,22 @@
 static CnetTimerID last_packet_timeout_timer = NULLTIMER;
 VECTOR rb;
 
-
 void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 	//printf("send packet pieces to data link at %s\n", nodeinfo.nodename);
+
 	size_t maxPacketLength = linkinfo[choose_link].mtu - PACKET_HEADER_SIZE;
 
 	NL_PACKET *tempPacket = (NL_PACKET *) packet;
+
+	if(tempPacket->kind == NL_ACK || tempPacket->kind == NL_ERR_ACK || tempPacket->kind == NL_ERR_ACK_RESENT){
+		//fprintf(stdout, "ack\n");
+		CHECK(down_to_datalink(choose_link, (char *) tempPacket,
+						PACKET_HEADER_SIZE));
+	} else if(tempPacket->kind != NL_DATA){
+		return;
+	}
+	//fprintf(stdout, "data! plength = %d length = %d srclength = %d \n", (int)tempPacket->length, (int) length, (int)tempPacket->src_packet_length);
+
 	size_t tempLength = length;
 	char *str = tempPacket->msg;
 
@@ -63,7 +73,8 @@ void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 		//printf("packet remains %d  bytes\n", tempLength);
 		piecePacket.length = maxPacketLength;
 		memcpy(piecePacket.msg, str, maxPacketLength);
-		piecePacket.piece_checksum = CNET_crc32((unsigned char *) (piecePacket.msg), piecePacket.length);
+		piecePacket.piece_checksum = CNET_crc32(
+				(unsigned char *) (piecePacket.msg), piecePacket.length);
 
 		CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
 				PACKET_SIZE(piecePacket)));
@@ -76,11 +87,13 @@ void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 
 	piecePacket.pieceEnd = 1;
 	piecePacket.length = tempLength;
-	piecePacket.piece_checksum = CNET_crc32((unsigned char *) (piecePacket.msg), piecePacket.length);
+	piecePacket.piece_checksum = CNET_crc32(
+			(unsigned char *) (piecePacket.msg), piecePacket.length);
 	//printf("last piece contains %d  bytes, pieceNumber = %d\n\n", tempLength ,piecePacket.pieceNumber);
 
 	memcpy(piecePacket.msg, str, tempLength);
-	piecePacket.piece_checksum = CNET_crc32((unsigned char *) (piecePacket.msg), piecePacket.length);
+	piecePacket.piece_checksum = CNET_crc32(
+			(unsigned char *) (piecePacket.msg), piecePacket.length);
 
 	////("Required link is provided link = %d\n", choose_link);
 	CHECK(down_to_datalink(choose_link, (char *) &piecePacket,
@@ -137,7 +150,8 @@ static EVENT_HANDLER( down_to_network) {
 	p.src_packet_length = (int) p.length;
 	//p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.src_packet_length);
 	p.checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
-	p.piece_checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
+	p.piece_checksum = CNET_crc32((unsigned char *) (p.msg),
+			p.src_packet_length);
 	p.trans_time = 0;
 	p.is_resent = 0;
 
@@ -180,7 +194,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			+ linkinfo[arrived_on_link].propagationdelay) * 100 / mtu;
 
 	size_t maxsize = mtu - PACKET_HEADER_SIZE;
-	if(p->length > maxsize || p->length < (size_t )0){
+	if (p->length > maxsize || p->length < (size_t) 0) {
 		//fprintf(stdout, "p->length = %d, max size = %d\n", (int)(p->length), (int) maxsize);
 		return 0;
 	}
@@ -197,7 +211,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				//memcpy(rb[p->src], (char *) p->msg, length);
 				//rb[p->src] = rb[p->src] + length;
 				//packet_length[p->src] += length;
-				if(RB_save_msg_link(rb, p, arrived_on_link) == 0)
+				if (RB_save_msg_link(rb, p, arrived_on_link) == 0)
 					return 0;
 
 				if (p->pieceEnd) {
@@ -295,9 +309,14 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			//length = p->length;
 			//memcpy(rb[p->src], (char *) p->msg, length);
 			//rb[p->src] = rb[p->src] + length;
-			if (p->kind != NL_DATA) {
+			if (p->kind == NL_ACK || p->kind == NL_ERR_ACK || p->kind
+					== NL_ERR_ACK_RESENT) {
+				//fprintf(stdout,"route ack!\n");
 				route_packet(p, arrived_on_link);
 			} else {
+				//fprintf(stdout,"route data!\n");
+
+
 				RB_save_msg_link(rb, p, arrived_on_link);
 				//("finish new rb save msg\n");
 				if (p->pieceEnd) {
@@ -306,6 +325,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					//printf("finish copy whole msg\n");
 					//printf("p->length after copy = %d\n", p->length);
 					route_packet(p, arrived_on_link);
+
 
 				}
 			}
@@ -323,12 +343,13 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 			- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
-	if(length != p->src_packet_length)
-			return;
+	if (length != p->src_packet_length)
+		return;
 	uint32_t p_checksum = p->checksum;
 
 	//fprintf(stdout, "length = %d\n", (int) p->src_packet_length);
-	uint32_t checksum = CNET_crc32((unsigned char *) (p->msg), p->src_packet_length);
+	uint32_t checksum = CNET_crc32((unsigned char *) (p->msg),
+			p->src_packet_length);
 
 	/*
 	 if (p->is_resent) {
@@ -352,12 +373,12 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 		if ((CNET_write_application(p->msg, &length)) == -1) {
 			if (p->msg) {
 				/*
-				fprintf(stdout, "node: %d, p->msg pointer invalid\n",
-						nodeinfo.address);
-						*/
+				 fprintf(stdout, "node: %d, p->msg pointer invalid\n",
+				 nodeinfo.address);
+				 */
 			} else {
-				fprintf(stdout, "node: %d, length invalid, length = %d\n",
-						nodeinfo.address, (int)length);
+				//fprintf(stdout, "node: %d, length invalid, length = %d\n",
+						//nodeinfo.address, (int) length);
 			}
 		}
 		send_ack(p, arrived_on_link, 0);
@@ -369,11 +390,13 @@ void route_packet(NL_PACKET *p, int arrived_on_link) {
 	//		- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
+
+	if(p->src_packet_length <= 0 || p->src_packet_length > linkinfo[arrived_on_link].mtu - PACKET_HEADER_SIZE )
+		return;
 	NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 	p->pieceNumber = 0;
-	p->pieceEnd = 0;
+	p->pieceEnd = 1;
 	p->length = p->src_packet_length;
-
 	//memcpy(wholePacket.msg, receiveBuffer[p->src], length);
 	//rb[p->src] = &receiveBuffer[p->src][0];
 
