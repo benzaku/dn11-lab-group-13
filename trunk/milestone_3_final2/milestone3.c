@@ -170,6 +170,12 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			/ linkinfo[arrived_on_link].bandwidth
 			+ linkinfo[arrived_on_link].propagationdelay) * 100 / mtu;
 
+	size_t maxsize = mtu - PACKET_HEADER_SIZE;
+	if(p->length > maxsize || p->length < (size_t )0){
+		fprintf(stdout, "p->length = %d, max size = %d\n", (int)(p->length), (int) maxsize);
+		return 0;
+	}
+
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
 		printf("receive a packet from src %d\n");
@@ -331,8 +337,10 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	} else { // received a correct packet
 		if ((CNET_write_application(p->msg, &length)) == -1) {
 			if (p->msg) {
+				/*
 				fprintf(stdout, "node: %d, p->msg pointer invalid\n",
 						nodeinfo.address);
+						*/
 			} else {
 				fprintf(stdout, "node: %d, length invalid, length = %d\n",
 						nodeinfo.address, (int)length);
