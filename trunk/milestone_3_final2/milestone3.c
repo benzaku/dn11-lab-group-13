@@ -131,7 +131,8 @@ static EVENT_HANDLER( down_to_network) {
 	p.pieceNumber = 0;
 	p.pieceEnd = 0;
 	p.src_packet_length = (int) p.length;
-	p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.src_packet_length);
+	//p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.src_packet_length);
+	p.checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
 	p.trans_time = 0;
 	p.is_resent = 0;
 
@@ -316,8 +317,8 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 			- PACKET_HEADER_SIZE) + p->length;
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
-	int p_checksum = p->checksum;
-	int checksum = CNET_ccitt((unsigned char *) (p->msg), p->src_packet_length);
+	uint32_t p_checksum = p->checksum;
+	uint32_t checksum = CNET_crc32((unsigned char *) (p->msg), p->src_packet_length);
 
 	/*
 	 if (p->is_resent) {
