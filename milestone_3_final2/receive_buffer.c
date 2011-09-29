@@ -1,6 +1,5 @@
 #include <cnetsupport.h>
 #include "nl_packet.h"
-//#include "vector.c"
 
 typedef struct {
 	unsigned int id;
@@ -9,7 +8,7 @@ typedef struct {
 } RB_BUF_ELEM;
 
 size_t RB_ELEM_SIZE = sizeof(RB_BUF_ELEM);
-static VECTOR rb;//receive buffer
+
 
 unsigned int RB_get_id(NL_PACKET *p) {
 	return ((unsigned int) (p->src) * 10000000 + (unsigned int) (p->dest)
@@ -23,11 +22,11 @@ unsigned int RB_get_id_link(NL_PACKET *p, int arrive_on_link){
 
 
 
-void RB_init() {
+void RB_init(VECTOR *rb) {
 	rb = vector_new();
 }
 
-void RB_save_msg_link(NL_PACKET *p, int arrive_on_link) {
+void RB_save_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
 	/*
 	printf("RB_save_msg\n");
 	printf("packet to be saved: src = %d, des = %d, seqno = %d\n, current = %d ", p->src,
@@ -88,7 +87,7 @@ void RB_save_msg_link(NL_PACKET *p, int arrive_on_link) {
 	//printf("\n");
 }
 
-void RB_copy_whole_msg_link(NL_PACKET *p, int arrive_on_link) {
+void RB_copy_whole_msg_link(VECTOR *rb, NL_PACKET *p, int arrive_on_link) {
 	/*
 	printf("RB_copy_whole_msg\n");
 	printf("packet to be removed: src = %d, des = %d, seqno = %d\n, current = %d ", p->src,
