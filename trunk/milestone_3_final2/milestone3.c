@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <cnetsupport.h>
 
 #include "queue.c"
 #include "nl_table.c"
@@ -32,6 +33,7 @@
 
 // here the second parameter is the length of msg of packet!
 static CnetTimerID last_packet_timeout_timer = NULLTIMER;
+VECTOR rb;//receive buffer
 
 void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 	//printf("send packet pieces to data link at %s\n", nodeinfo.nodename);
@@ -188,10 +190,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				//memcpy(rb[p->src], (char *) p->msg, length);
 				//rb[p->src] = rb[p->src] + length;
 				//packet_length[p->src] += length;
-				RB_save_msg_link(p, arrived_on_link);
+				RB_save_msg_link(&rb, p, arrived_on_link);
 
 				if (p->pieceEnd) {
-					RB_copy_whole_msg_link(p, arrived_on_link);
+					RB_copy_whole_msg_link(&rb, p, arrived_on_link);
 					up_to_application(p, arrived_on_link);
 					return 0;
 				}
@@ -199,10 +201,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				//in this case means the ack send before has not been received
 				printf("outdated frame come!\n");
 
-				RB_save_msg_link(p, arrived_on_link);
+				RB_save_msg_link(&rb, p, arrived_on_link);
 
 				if (p->pieceEnd) {
-					RB_copy_whole_msg_link(p, arrived_on_link);
+					RB_copy_whole_msg_link(&rb, p, arrived_on_link);
 					send_ack(p, arrived_on_link, 2);
 					return 0;
 				}
@@ -288,11 +290,11 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			if (p->kind != NL_DATA) {
 				route_packet(p, arrived_on_link);
 			} else {
-				RB_save_msg_link(p, arrived_on_link);
+				RB_save_msg_link(&rb, p, arrived_on_link);
 				//("finish new rb save msg\n");
 				if (p->pieceEnd) {
 
-					RB_copy_whole_msg_link(p, arrived_on_link);
+					RB_copy_whole_msg_link(&rb, p, arrived_on_link);
 					//printf("finish copy whole msg\n");
 					//printf("p->length after copy = %d\n", p->length);
 					route_packet(p, arrived_on_link);
@@ -484,7 +486,7 @@ EVENT_HANDLER( reboot_node) {
 	 rb[i] = receiveBuffer[i];
 	 //packet_length[i] = 0;
 	 }*/
-	RB_init();
+	RB_init(&rb);
 	//memset(packet_length, 0, 256*sizeof(size_t));
 	reboot_DLL();
 	reboot_NL_table();
