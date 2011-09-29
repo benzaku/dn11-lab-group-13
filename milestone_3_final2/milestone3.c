@@ -329,7 +329,15 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	if (p_checksum != checksum) {
 		send_ack(p, arrived_on_link, 1);
 	} else { // received a correct packet
-		CHECK(CNET_write_application(p->msg, &length));
+		if ((CNET_write_application(p->msg, &length)) == -1) {
+			if (p->msg) {
+				fprintf(stdout, "node: %d, p->msg pointer invalid\n",
+						nodeinfo.address);
+			} else {
+				fprintf(stdout, "node: %d, length invalid, length = %d\n",
+						nodeinfo.address, (int)length);
+			}
+		}
 		send_ack(p, arrived_on_link, 0);
 	}
 }
