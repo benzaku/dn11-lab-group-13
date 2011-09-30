@@ -62,7 +62,7 @@ static void flood(char *packet, size_t length, int choose_link, int avoid_link) 
 }
 
 
-void piece_to_flood(char *packet, size_t piecePacketSize, int mtu_from_src_to_dest) {
+void piece_to_flood(char *packet, size_t piecePacketSize, size_t mtu_from_src_to_dest) {
 
     
 	NL_PACKET *tempPacket = (NL_PACKET *) packet;
@@ -136,7 +136,8 @@ static EVENT_HANDLER( down_to_network) {
 	update_last_packet(&p);
         
         //TODO: please inform the mtu from src to dest by using pathfinder packet
-        pieces_to_flood((char *) &p, PACKET_SIZE(p), mtu_from_src_to_dest);
+        size_t mtu_from_src_to_dest = 1111;
+        piece_to_flood((char *) &p, PACKET_SIZE(p), mtu_from_src_to_dest);
 
 }
 
@@ -285,7 +286,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                     NL_savehopcount(p->src, p->hopcount, arrived_on_link);//TODO: pay attention for this line, shall we need it?
                     
                     /* retransmit on best links *except* the one on which it arrived */
-                    flood3(packet, length, 0, arrived_on_link);
+                    flood(packet, length, 0, arrived_on_link);
 		}
 	}
 	return 0;
