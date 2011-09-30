@@ -79,6 +79,12 @@ static EVENT_HANDLER( up_to_datalink) {
 
 	length = sizeof(DLL_FRAME);
 	CHECK(CNET_read_physical(&link, (char *) &f, &length));
+	NL_PACKET *p = (NL_PACKET*)&f;
+	if(p->length < 0 || p->length > MAX_MESSAGE_SIZE)
+		return;
+	if (p->piece_checksum != CNET_crc32((unsigned char *) (p->msg),
+			p->length))
+		return;
 	////("DLL frame : %s\n", (char *) &f);
 	// 	printmsg((char*) &f, length);
 	CHECK(up_to_network(f.packet, length, link));
@@ -98,7 +104,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 					/ linkinfo[temp.link].bandwidth;
 			lasttimer = CNET_start_timer(EV_TIMER1, 1.1 * timeout, 0);
 			size_t len = temp.length;
-			CHECK(CNET_write_physical_reliable(temp.link, temp.packet, &len));
+			CHECK(CNET_write_physical(temp.link, temp.packet, &len));
 			////("write_physical\n");
 			//(temp.packet, len);
 
@@ -119,6 +125,7 @@ void reboot_DLL(void) {
 	//CnetTime timeout;
 	CHECK(CNET_set_handler(EV_PHYSICALREADY, up_to_datalink, 0));
 	CHECK(CNET_set_handler(EV_TIMER1, timeouts, 0));
+
 	initQueue(&buf);
 	////("buf init size = %d\n", buf.size);
 

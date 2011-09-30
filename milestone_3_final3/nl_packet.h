@@ -12,11 +12,12 @@ typedef struct {
 	NL_PACKETKIND kind; /* only ever NL_DATA or NL_ACK */
 	unsigned short int seqno; /* 0, 1, 2, ... */
 	unsigned short int hopcount;
-	size_t pieceNumber;
+	size_t pieceStartPosition;
 	unsigned short int pieceEnd;
 	size_t length; /* the length of the msg portion only */
-	int src_packet_length; /* dont change during routing */
-	int checksum;
+	size_t src_packet_length; /* dont change during routing */
+	uint32_t checksum;
+	uint32_t piece_checksum;
 	unsigned int trans_time;
 	unsigned short int is_resent;
 
