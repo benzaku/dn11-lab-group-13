@@ -62,8 +62,8 @@ void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 	piecePacket.kind = tempPacket->kind;
 	piecePacket.seqno = tempPacket->seqno;
 	piecePacket.hopcount = tempPacket->hopcount;
-	piecePacket.pieceNumber = tempPacket->pieceNumber;
-	piecePacket.pieceEnd = tempPacket->pieceEnd;
+	piecePacket.pieceStartPosition = 0;
+	piecePacket.pieceEnd = 0;
 	piecePacket.src_packet_length = tempPacket->src_packet_length;
 	piecePacket.checksum = tempPacket->checksum;
 	piecePacket.trans_time = tempPacket->trans_time;
@@ -81,7 +81,7 @@ void down_pieces_to_datalink(char *packet, size_t length, int choose_link) {
 		//("piece %d down_to_datalink\n", piecePacket.pieceNumber);
 
 		str = str + maxPacketLength;
-		piecePacket.pieceNumber = piecePacket.pieceNumber + 1;
+		piecePacket.pieceStartPosition = piecePacket.pieceStartPosition + maxPacketLength;
 		tempLength = tempLength - maxPacketLength;
 	}
 
@@ -145,7 +145,7 @@ static EVENT_HANDLER( down_to_network) {
 	p.kind = NL_DATA;
 	p.seqno = NL_nextpackettosend(p.dest);
 	p.hopcount = 0;
-	p.pieceNumber = 0;
+	p.pieceStartPosition = 0;
 	p.pieceEnd = 0;
 	p.src_packet_length = (int) p.length;
 	//p.checksum = CNET_ccitt((unsigned char *) (p.msg), p.src_packet_length);
@@ -339,8 +339,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	//debug
-	size_t length = p->pieceNumber * (linkinfo[arrived_on_link].mtu
-			- PACKET_HEADER_SIZE) + p->length;
+	size_t length = p->pieceStartPosition + p->length;
 	//length = packet_length[p->src];
 	//packet_length[p->src] = 0;
 	if (length != p->src_packet_length)
@@ -394,7 +393,7 @@ void route_packet(NL_PACKET *p, int arrived_on_link) {
 	if(p->src_packet_length <= 0 || p->src_packet_length > linkinfo[arrived_on_link].mtu - PACKET_HEADER_SIZE )
 		return;
 	NL_savehopcount(p->src, p->trans_time, arrived_on_link);
-	p->pieceNumber = 0;
+	p->pieceStartPosition = 0;
 	p->pieceEnd = 1;
 	p->length = p->src_packet_length;
 	//memcpy(wholePacket.msg, receiveBuffer[p->src], length);
@@ -432,7 +431,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 
 	/* actually we just need to set p->length to 0 */
 	p->hopcount = 0;
-	p->pieceNumber = 0;
+	p->pieceStartPosition = 0;
 	p->pieceEnd = 1;
 	p->length = 0;
 	p->src_packet_length = 0;
