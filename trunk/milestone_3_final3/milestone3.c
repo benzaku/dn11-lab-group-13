@@ -40,7 +40,6 @@ VECTOR rb;
  ANY OTHER SPECIFIED LINK.
  */
 static void flood(char *packet, size_t length, int choose_link, int avoid_link) {
-        NL_PACKET *p = (NL_PACKET *) packet;
 
         /*  REQUIRED LINK IS PROVIDED - USE IT */
         if (choose_link != 0) {
@@ -49,6 +48,7 @@ static void flood(char *packet, size_t length, int choose_link, int avoid_link) 
 
         /*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
         else {
+                NL_PACKET *p = (NL_PACKET *) packet;
                 int links_wanted = NL_linksofminhops(p->dest);
                 int link;
 
@@ -56,7 +56,7 @@ static void flood(char *packet, size_t length, int choose_link, int avoid_link) 
                         if (link == avoid_link) /* possibly avoid this one */
                                 continue;
                         if (links_wanted & (1 << link)) /* use this link if wanted */
-                                CHECK(down_to_datalink(choose_link, packet, length));
+                                CHECK(down_to_datalink(link, packet, length));
                 }
         }
 }
