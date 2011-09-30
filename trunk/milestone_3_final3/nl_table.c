@@ -17,6 +17,7 @@ typedef struct {
 	int minhop_trans_time;
 	int minhop_link; // link via which minhops path observed
 	NL_PACKET lastpacket;
+	int last_ack_expected;
 	unsigned short int has_resent;
 //unsigned short int resent_times; //for debug
 } NLTABLE;
