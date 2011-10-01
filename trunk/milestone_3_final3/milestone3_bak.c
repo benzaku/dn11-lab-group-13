@@ -40,6 +40,7 @@ VECTOR rb;
  ANY OTHER SPECIFIED LINK.
  */
 static void flood(char *packet, size_t length, int choose_link, int avoid_link) {
+        NL_PACKET *p = (NL_PACKET *) packet;
 
         /*  REQUIRED LINK IS PROVIDED - USE IT */
         if (choose_link != 0) {
@@ -62,7 +63,7 @@ static void flood(char *packet, size_t length, int choose_link, int avoid_link) 
 }
 
 
-void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
+void piece_to_flood(char *packet, size_t piecePacketSize, size_t mtu_from_src_to_dest) {
 
     
 	NL_PACKET *tempPacket = (NL_PACKET *) packet;
@@ -89,7 +90,7 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 		piecePacket.piece_checksum = CNET_crc32(
 				(unsigned char *) (piecePacket.msg), piecePacket.length);
 
-		flood((char *) &piecePacket, PACKET_SIZE(piecePacket), 0, 0);
+		flood((char *) &piecePacket, piecePacketSize, 0, 0);
 
 		str = str + maxPieceLength;
 		piecePacket.pieceStartPosition = piecePacket.pieceStartPosition + maxPieceLength;
@@ -103,7 +104,7 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 	piecePacket.piece_checksum = CNET_crc32(
 			(unsigned char *) (piecePacket.msg), piecePacket.length);
 
-	flood((char *) &piecePacket, PACKET_SIZE(piecePacket), 0, 0);
+	flood((char *) &piecePacket, piecePacketSize, 0, 0);
 
 }
 
@@ -136,8 +137,8 @@ static EVENT_HANDLER( down_to_network) {
 	update_last_packet(&p);
         
         //TODO: please inform the mtu from src to dest by using pathfinder packet
-        size_t mtu_from_src_to_dest = 96;
-        piece_to_flood((char *) &p, mtu_from_src_to_dest);
+        size_t mtu_from_src_to_dest = 1111;
+        piece_to_flood((char *) &p, PACKET_SIZE(p), mtu_from_src_to_dest);
 
 }
 
@@ -183,24 +184,19 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			
 			if (p->seqno == NL_packetexpected(p->src)) {
 				
-				if(RB_save_msg_link(rb, p, arrived_on_link) == 2) {
-                                    /*
-                                        all pieces are arrived
-                                        now get the whole msg from buffer and write it in applicaiton layer
-                                    */
-                                    
-                                    RB_copy_whole_msg_link(rb, p, arrived_on_link);
-//                                     up_to_application(p, arrived_on_link);
-                                    CHECK(CNET_write_application((char*) p->msg, &p->src_packet_length));
-                                    return 0;
-                                
-                                } else if(p->pieceEnd || p->is_resent){
-                                    
-                                    //TODO: check which piece is missing
-                                    //TODO: and require to resend this piece 
-                                    
-                                }
-				
+				RB_save_msg_link(rb, p, arrived_on_link);
+
+				if (p->pieceEnd ) {
+                                    if(packet_check()){
+					RB_copy_whole_msg_link(rb, p, arrived_on_link);
+					up_to_application(p, arrived_on_link);
+					return 0;
+                                    }
+                                    else{
+                                        //TODO: check which piece is missing
+                                        //TODO: and require to resend this piece 
+                                    }
+				}
 			}
 			break;
 
@@ -297,7 +293,17 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	if (p_checksum != checksum) {
 		send_ack(p, arrived_on_link, 1);
 	} else { // received a correct packet
-		CHECK(CNET_write_application(p->msg, &length));
+		if ((CNET_write_application(p->msg, &length)) == -1) {
+			if (p->msg) {
+				/*
+				 fprintf(stdout, "node: %d, p->msg pointer invalid\n",
+				 nodeinfo.address);
+				 */
+			} else {
+				//fprintf(stdout, "node: %d, length invalid, length = %d\n",
+						//nodeinfo.address, (int) length);
+			}
+		}
 		send_ack(p, arrived_on_link, 0);
 	}
 }
