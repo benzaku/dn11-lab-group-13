@@ -177,36 +177,30 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
-		printf("receive a packet from src %d\n");
+        
 		switch (p->kind) {
 		case NL_DATA:
-			printf("NL_DATA, seqno = %d, expected = %d", p->seqno,
-					NL_packetexpected(p->src));
+			
 			if (p->seqno == NL_packetexpected(p->src)) {
-				//length = p->length;
-				//memcpy(rb[p->src], (char *) p->msg, length);
-				//rb[p->src] = rb[p->src] + length;
-				//packet_length[p->src] += length;
-				if (RB_save_msg_link(rb, p, arrived_on_link) == 0)
-					return 0;
-
-				if (p->pieceEnd) {
-					RB_copy_whole_msg_link(rb, p, arrived_on_link);
-					up_to_application(p, arrived_on_link);
-					return 0;
-				}
-			} else if (p->seqno < NL_packetexpected(p->src)) {
-				//in this case means the ack send before has not been received
-				printf("outdated frame come!\n");
-
-				RB_save_msg_link(rb, p, arrived_on_link);
-
-				if (p->pieceEnd) {
-					RB_copy_whole_msg_link(rb, p, arrived_on_link);
-					send_ack(p, arrived_on_link, 2);
-					return 0;
-				}
-
+				
+				if(RB_save_msg_link(rb, p, arrived_on_link) == 2) {
+                                    /*
+                                        all pieces are arrived
+                                        now get the whole msg from buffer and write it in applicaiton layer
+                                    */
+                                    
+                                    RB_copy_whole_msg_link(rb, p, arrived_on_link);
+//                                     up_to_application(p, arrived_on_link);
+                                    CHECK(CNET_write_application((char*) p->msg, &p->src_packet_length));
+                                    return 0;
+                                
+                                } else if(p->pieceEnd || p->is_resent){
+                                    
+                                    //TODO: check which piece is missing
+                                    //TODO: and require to resend this piece 
+                                    
+                                }
+				
 			}
 			break;
 
@@ -238,7 +232,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					int len = PACKET_HEADER_SIZE + packettoresend->length;
 					packettoresend->is_resent = 1;
 					NL_set_has_resent(p->src, 1);
-					//NL_inc_resent_times(p->src); // for debug
 					flood((char *) packettoresend, len, 0, 0);
 
 				} else {
@@ -249,7 +242,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				printf(
 						"this packet has already been correct received, dont resent it again\n");
 			}
-			//printf("\n");
 			break;
 
 		case NL_ERR_ACK_RESENT:
@@ -262,8 +254,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 						packettoresend->src, packettoresend->dest,
 						packettoresend->seqno, packettoresend->length,
 						packettoresend->checksum);
-				//printf("this packet has been resent %d times before this time\n", NL_get_resent_times(p->src)); //for debug
-				//NL_inc_resent_times(p->src); // for debug
+				
 				int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
 				flood((char *) packettoresend, len, 0, 0);
@@ -272,7 +263,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				printf(
 						"this packet has already been correct received, dont resent it again\n");
 			}
-			//("\n");
+
 			break;
 		default:
 			printf("it's nothing!====================\n");
@@ -306,17 +297,7 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	if (p_checksum != checksum) {
 		send_ack(p, arrived_on_link, 1);
 	} else { // received a correct packet
-		if ((CNET_write_application(p->msg, &length)) == -1) {
-			if (p->msg) {
-				/*
-				 fprintf(stdout, "node: %d, p->msg pointer invalid\n",
-				 nodeinfo.address);
-				 */
-			} else {
-				//fprintf(stdout, "node: %d, length invalid, length = %d\n",
-						//nodeinfo.address, (int) length);
-			}
-		}
+		CHECK(CNET_write_application(p->msg, &length));
 		send_ack(p, arrived_on_link, 0);
 	}
 }
