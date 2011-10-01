@@ -34,43 +34,39 @@
 static CnetTimerID last_packet_timeout_timer = NULLTIMER;
 VECTOR rb;
 
-
 /*  flood() IS A BASIC ROUTING STRATEGY WHICH TRANSMITS THE OUTGOING PACKET
  ON EITHER THE SPECIFIED LINK, OR ALL BEST-KNOWN LINKS WHILE AVOIDING
  ANY OTHER SPECIFIED LINK.
  */
 static void flood(char *packet, size_t length, int choose_link, int avoid_link) {
 
-        /*  REQUIRED LINK IS PROVIDED - USE IT */
-        if (choose_link != 0) {
-                CHECK(down_to_datalink(choose_link, packet, length));
-        }
+	/*  REQUIRED LINK IS PROVIDED - USE IT */
+	if (choose_link != 0) {
+		CHECK(down_to_datalink(choose_link, packet, length));
+	}
 
-        /*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
-        else {
-                NL_PACKET *p = (NL_PACKET *) packet;
-                int links_wanted = NL_linksofminhops(p->dest);
-                int link;
+	/*  OTHERWISE, CHOOSE THE BEST KNOWN LINKS, AVOIDING ANY SPECIFIED ONE */
+	else {
+		NL_PACKET *p = (NL_PACKET *) packet;
+		int links_wanted = NL_linksofminhops(p->dest);
+		int link;
 
-                for (link = 1; link <= nodeinfo.nlinks; ++link) {
-                        if (link == avoid_link) /* possibly avoid this one */
-                                continue;
-                        if (links_wanted & (1 << link)) /* use this link if wanted */
-                                CHECK(down_to_datalink(link, packet, length));
-                }
-        }
+		for (link = 1; link <= nodeinfo.nlinks; ++link) {
+			if (link == avoid_link) /* possibly avoid this one */
+				continue;
+			if (links_wanted & (1 << link)) /* use this link if wanted */
+				CHECK(down_to_datalink(link, packet, length));
+		}
+	}
 }
-
 
 void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 
-    
 	NL_PACKET *tempPacket = (NL_PACKET *) packet;
-        size_t maxPieceLength = mtu_from_src_to_dest - PACKET_HEADER_SIZE;
-        size_t tempLength = tempPacket->length;
-        char *str = tempPacket->msg;
+	size_t maxPieceLength = mtu_from_src_to_dest - PACKET_HEADER_SIZE;
+	size_t tempLength = tempPacket->length;
+	char *str = tempPacket->msg;
 
-        
 	NL_PACKET piecePacket;
 	piecePacket.src = tempPacket->src;
 	piecePacket.dest = tempPacket->dest;
@@ -92,7 +88,8 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 		flood((char *) &piecePacket, PACKET_SIZE(piecePacket), 0, 0);
 
 		str = str + maxPieceLength;
-		piecePacket.pieceStartPosition = piecePacket.pieceStartPosition + maxPieceLength;
+		piecePacket.pieceStartPosition = piecePacket.pieceStartPosition
+				+ maxPieceLength;
 		tempLength = tempLength - maxPieceLength;
 	}
 
@@ -106,9 +103,6 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 	flood((char *) &piecePacket, PACKET_SIZE(piecePacket), 0, 0);
 
 }
-
-
-
 
 /*  down_to_network() RECEIVES NEW MESSAGES FROM THE APPLICATION LAYER AND
  PREPARES THEM FOR TRANSMISSION TO OTHER NODES.
@@ -134,10 +128,10 @@ static EVENT_HANDLER( down_to_network) {
 	p.is_resent = 0;
 
 	update_last_packet(&p);
-        
-        //TODO: please inform the mtu from src to dest by using pathfinder packet
-        size_t mtu_from_src_to_dest = 96;
-        piece_to_flood((char *) &p, mtu_from_src_to_dest);
+
+	//TODO: please inform the mtu from src to dest by using pathfinder packet
+	size_t mtu_from_src_to_dest = 96;
+	piece_to_flood((char *) &p, mtu_from_src_to_dest);
 
 }
 
@@ -146,15 +140,12 @@ static void NL_update_lastackexpected(CnetAddr address) {
 			address)].ackexpected;
 }
 
-
 /*  up_to_network() IS CALLED FROM THE DATA LINK LAYER (BELOW) TO ACCEPT
  A PACKET FOR THIS NODE, OR TO RE-ROUTE IT TO THE INTENDED DESTINATION.
  */
 int up_to_network(char *packet, size_t length, int arrived_on_link) {
-	
-    
-    
-        NL_PACKET *p = (NL_PACKET *) packet;
+
+	NL_PACKET *p = (NL_PACKET *) packet;
 	if (p->src == nodeinfo.address) {
 		printf(
 				"drop a packet at %d, src = %d, des = %d, seqno = %d, length = %d\n\n",
@@ -162,7 +153,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		return 0;
 	}
 
-	
 	++p->hopcount; /* took 1 hop to get here */
 	mtu = linkinfo[arrived_on_link].mtu;
 	p->trans_time += ((CnetTime) 8000 * 1000 * mtu
@@ -177,30 +167,31 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
-        
+
 		switch (p->kind) {
 		case NL_DATA:
-			
+
 			if (p->seqno == NL_packetexpected(p->src)) {
-				
-				if(RB_save_msg_link(rb, p, arrived_on_link) == 2) {
-                                    /*
-                                        all pieces are arrived
-                                        now get the whole msg from buffer and write it in applicaiton layer
-                                    */
-                                    
-                                    RB_copy_whole_msg_link(rb, p, arrived_on_link);
-//                                     up_to_application(p, arrived_on_link);
-                                    CHECK(CNET_write_application((char*) p->msg, &p->src_packet_length));
-                                    return 0;
-                                
-                                } else if(p->pieceEnd || p->is_resent){
-                                    
-                                    //TODO: check which piece is missing
-                                    //TODO: and require to resend this piece 
-                                    
-                                }
-				
+
+				if (RB_save_msg_link(rb, p, arrived_on_link) == 2) {
+					/*
+					 all pieces are arrived
+					 now get the whole msg from buffer and write it in applicaiton layer
+					 */
+
+					RB_copy_whole_msg_link(rb, p, arrived_on_link);
+					//                                     up_to_application(p, arrived_on_link);
+					CHECK(CNET_write_application((char*) p->msg,
+							&p->src_packet_length));
+					return 0;
+
+				} else if (p->pieceEnd || p->is_resent) {
+
+					//TODO: check which piece is missing
+					//TODO: and require to resend this piece
+
+				}
+
 			}
 			break;
 
@@ -254,7 +245,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 						packettoresend->src, packettoresend->dest,
 						packettoresend->seqno, packettoresend->length,
 						packettoresend->checksum);
-				
+
 				int len = PACKET_HEADER_SIZE + packettoresend->length;
 				packettoresend->is_resent = 1;
 				flood((char *) packettoresend, len, 0, 0);
@@ -273,11 +264,11 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
-		
-                    NL_savehopcount(p->src, p->hopcount, arrived_on_link);//TODO: pay attention for this line, shall we need it?
-                    
-                    /* retransmit on best links *except* the one on which it arrived */
-                    flood(packet, length, 0, arrived_on_link);
+
+			NL_savehopcount(p->src, p->hopcount, arrived_on_link);//TODO: pay attention for this line, shall we need it?
+
+			/* retransmit on best links *except* the one on which it arrived */
+			flood(packet, length, 0, arrived_on_link);
 		}
 	}
 	return 0;
@@ -285,7 +276,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	size_t length = p->pieceStartPosition + p->length;
-	
+
 	if (length != p->src_packet_length)
 		return;
 	uint32_t p_checksum = p->checksum;
@@ -293,7 +284,6 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 	uint32_t checksum = CNET_crc32((unsigned char *) (p->msg),
 			p->src_packet_length);
 
-	
 	if (p_checksum != checksum) {
 		send_ack(p, arrived_on_link, 1);
 	} else { // received a correct packet
@@ -301,7 +291,6 @@ void up_to_application(NL_PACKET *p, int arrived_on_link) {
 		send_ack(p, arrived_on_link, 0);
 	}
 }
-
 
 void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 	CnetAddr tmpaddr;
