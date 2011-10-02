@@ -150,10 +150,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		case NL_TEST:
 			//			if (p->min_mtu != 0 && p->min_mtu <= NL_minmtu(p->src))
 			//			break;
-
+/*
 			if (NL_gettesthascome(p->src))
 				break;
-
+*/
 			printf(
 					"NL_TEST come! src = %d, dest = %d, cur = %d, min mtu = %d\n",
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
