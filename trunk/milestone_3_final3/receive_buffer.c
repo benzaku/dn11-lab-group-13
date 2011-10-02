@@ -7,6 +7,12 @@ typedef struct {
 	char msg[MAX_MESSAGE_SIZE];
 } RB_BUF_ELEM;
 
+typedef struct {
+	int *pos;
+	int size;
+	
+} START_POS;
+
 size_t RB_ELEM_SIZE = sizeof(RB_BUF_ELEM);
 
 
@@ -54,9 +60,10 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
             
             //for Initialization write all positions in buffer as 0 
             int j;
-            for(j = 0; j < MAX_MESSAGE_SIZE; j++){
-                bufelem.msg[j] = 0;
-            }
+//            for(j = 0; j < MAX_MESSAGE_SIZE; j++){
+//                bufelem.msg[j] = 0;
+//            }
+            memset(bufelem, CHAR_MAX, MAX_MESSAGE_SIZE);
             
             memcpy(bufelem.msg, (char *) p->msg, p->length);
             vector_append(rb, &bufelem, RB_ELEM_SIZE);
@@ -99,29 +106,30 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 }
 
 /*
-    find the first missing frame postion
+    find all missing frame position
 */
-int RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
+START_POS RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
 
     unsigned int id = RB_get_id_link(p, arrive_on_link);
     int n = vector_nitems(rb);
     RB_BUF_ELEM *p_bufelem;
     int i, j;
+    START_POS start_pos;
+    pos.size = 0;
+    int *temp;
+    temp = start_pos.pos;
     
     for(i = 0; i < n; i++){
-        
         p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
         if(p_bufelem->id == id){
-            
-            for(j = 0; j < p->src_packet_length; j = j + p->length){
-                
-                if(p_bufelem->msg[j] == 0) return j;
-            
+            for(j = 0; j < p->src_packet_length; j = j + p->mtu){       
+                if(p_bufelem->msg[j] == CHAR_MAX) {
+                	*(temp+size) = j;
+                	++start_pos.size;
+                }
             }
-            
-            break;
+         return start_pos;
         }
-        break;
     }
     return -1;
 
