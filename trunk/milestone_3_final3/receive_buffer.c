@@ -90,3 +90,27 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	}
 
 }
+
+// int RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
+// 
+//     unsigned int id = RB_get_id_link(p, arrive_on_link);
+//     int n = vector_nitems(rb);
+//     RB_BUF_ELEM *bufelem;
+//     int i, j;
+//     
+//     for(i = 0; i < n; i++){
+//         
+//         bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
+//         if(bufelem->id == id){
+//             
+//             for(j = 0; j < p->src_packet_length; j = j + p->length){
+//                 if(!bufelem->msg[j]) break;
+//             
+//             }
+//             
+//             break;
+//         }
+//     }
+//     return j;
+// 
+// }
