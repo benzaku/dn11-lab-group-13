@@ -3,7 +3,7 @@
 #include <cnet.h>
 
 typedef enum {
-	NL_DATA, NL_ACK, NL_ERR_ACK, NL_ERR_ACK_RESENT
+	NL_DATA, NL_ACK, NL_ERR_ACK, NL_ERR_ACK_RESENT, NL_TEST, NL_TEST_ACK
 } NL_PACKETKIND;
 
 typedef struct {
@@ -20,7 +20,7 @@ typedef struct {
 	uint32_t piece_checksum;
 	unsigned int trans_time;
 	unsigned short int is_resent;
-	unsigned int mtu;
+	unsigned int min_mtu;
 
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
