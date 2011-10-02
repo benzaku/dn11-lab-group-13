@@ -45,11 +45,7 @@ struct queueLK buf;
 static struct elemType temp;
 int down_to_datalink(int link, char *packet, size_t length) {
 
-	//("down_to_datalink\n");
-	extern void print_msg(char *, size_t);
-
-	//struct elemType temp;
-
+        printf("down to data link\n");
 	temp.length = length;
 	temp.link = link;
 	temp.packet = malloc(length);
@@ -67,32 +63,28 @@ int down_to_datalink(int link, char *packet, size_t length) {
  PAYLOAD (A PACKET) UP TO THE NETWORK LAYER.
  */
 static EVENT_HANDLER( up_to_datalink) {
-	//("up_to_datalink\n");
 	extern int up_to_network(char *packet, size_t length, int arrived_on);
-	//extern void print_msg(char *, size_t);
+	
 
 	DLL_FRAME f;
 	size_t length;
 	int link;
 
-	////("Frame from physical layer\n");
-
 	length = sizeof(DLL_FRAME);
 	CHECK(CNET_read_physical(&link, (char *) &f, &length));
+        printf("read physical\n");
 	NL_PACKET *p = (NL_PACKET*)&f;
 	if(p->length < 0 || p->length > MAX_MESSAGE_SIZE)
 		return;
-	if (p->piece_checksum != CNET_crc32((unsigned char *) (p->msg),
-			p->length))
-		return;
-	////("DLL frame : %s\n", (char *) &f);
-	// 	printmsg((char*) &f, length);
+// 	if (p->piece_checksum != CNET_crc32((unsigned char *) (p->msg),
+// 			p->length))
+// 		return;
+	printf("DLL frame : %s\n", (char *) &f);
 	CHECK(up_to_network(f.packet, length, link));
 }
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
-	////("timeouts\n");
-	//extern void print_msg(char *, size_t);
+        
 	CnetTime timeout;
 	if (timer == lasttimer) {
 
@@ -106,8 +98,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			size_t len = temp.length;
                        
 			CHECK(CNET_write_physical(temp.link, temp.packet, &len));
-			////("write_physical\n");
-			//(temp.packet, len);
+			printf("write_physical\n");
 
 			outQueue(&buf);
 			////("buf size after delete = %d\n", buf.size);
@@ -119,7 +110,6 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 		}
 	}
 
-	////("timer stop!\n");
 }
 
 void reboot_DLL(void) {
@@ -128,10 +118,6 @@ void reboot_DLL(void) {
 	CHECK(CNET_set_handler(EV_TIMER1, timeouts, 0));
 
 	initQueue(&buf);
-	////("buf init size = %d\n", buf.size);
-
-	//char * a = "abcde";
-	////("size of a: %d\n", sizeof(a));
 
 	CnetTime timeout;
 
