@@ -173,21 +173,36 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 			if (p->seqno == NL_packetexpected(p->src)) {
 				
-				if(RB_save_msg_link(rb, p, arrived_on_link) == 2) {
+                                int isWholeMsg = RB_save_msg_link(rb, p, arrived_on_link);
+                            
+				if(isWholeMsg) {
                                     /*
                                         all pieces are arrived
                                         now get the whole msg from buffer and write it in applicaiton layer
                                     */
                                     
-                                    RB_copy_whole_msg_link(rb, p, arrived_on_link);
                                     CHECK(CNET_write_application((char*) p->msg, &p->src_packet_length));
                                     send_ack(p, arrived_on_link, 0);
                                     return 0;
                                 
-                                } else if(p->pieceEnd || p->is_resent){
+                                } else if(!isWholeMsg && p->pieceStartPosition + p->length == p->src_packet_length){
+                                    /*
+                                        last piece arrives, now check the missing frame position
+                                    */
                                     
-                                    //TODO: check which piece is missing
-                                    //TODO: and require to resend this piece 
+                                    // check which piece is missing and require to resend this piece
+                                    
+                                    START_POS allMissingFramePositions;
+                                    RB_find_missing_piece(rb, p, arrived_on_link, &allMissingFramePositions);
+                                    
+                                    int numberOfMissingFrame = allMissingFramePositions.size;
+                                    int i;
+                                    for(i = 0; i < numberOfMissingFrame; i++){
+                                        
+                                        send_ack (p, arrived_on_link, 1);
+                                        allMissingFramePositions.pos++;
+                                    }
+                                    
                                     
                                 }
 			}
@@ -308,6 +323,8 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 		NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 		p->kind = NL_ACK;
                 p->piece_checksum = 0;
+                p->pieceStartPosition = 0;
+
 // 		flood((char *) p, PACKET_HEADER_SIZE, arrived_on_link, 0);
 	} else if (mode_code == 2) {
 		printf("ack for outdated frame\n");
@@ -317,7 +334,6 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 
 	/* actually we just need to set p->length to 0 */
 	p->hopcount = 0;
-	p->pieceStartPosition = 0;
 	p->pieceEnd = 1;
 	p->length = 0;
 	p->src_packet_length = 0;
@@ -392,6 +408,7 @@ EVENT_HANDLER( reboot_node) {
 	}
 	
 	rb = vector_new();
+//         RB_init(rb);
 	
 	reboot_DLL();
 	reboot_NL_table();
