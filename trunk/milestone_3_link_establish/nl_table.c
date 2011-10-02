@@ -18,6 +18,7 @@ typedef struct {
 	int minhop_link; // link via which minhops path observed
 	int test_has_come;
 	NL_PACKET lasttestpacket;
+	NL_PACKET lastpacket;
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
