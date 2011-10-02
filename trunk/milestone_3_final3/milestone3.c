@@ -172,7 +172,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		case NL_DATA:
 
 			if (p->seqno == NL_packetexpected(p->src)) {
-<<<<<<< .mine
 				
 				if(RB_save_msg_link(rb, p, arrived_on_link) == 2) {
                                     /*
@@ -191,29 +190,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                     //TODO: and require to resend this piece 
                                     
                                 }
-				
-=======
-
-				if (RB_save_msg_link(rb, p, arrived_on_link) == 2) {
-					/*
-					 all pieces are arrived
-					 now get the whole msg from buffer and write it in applicaiton layer
-					 */
-
-					RB_copy_whole_msg_link(rb, p, arrived_on_link);
-					//                                     up_to_application(p, arrived_on_link);
-					CHECK(CNET_write_application((char*) p->msg,
-							&p->src_packet_length));
-					return 0;
-
-				} else if (p->pieceEnd || p->is_resent) {
-
-					//TODO: check which piece is missing
-					//TODO: and require to resend this piece
-
-				}
-
->>>>>>> .r163
 			}
 			break;
 
