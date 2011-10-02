@@ -59,7 +59,7 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
             bufelem.length = p->length;
             
             //for Initialization write all positions in buffer as 0 
-            int j;
+//            int j;
 //            for(j = 0; j < MAX_MESSAGE_SIZE; j++){
 //                bufelem.msg[j] = 0;
 //            }
@@ -77,7 +77,7 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	unsigned int id = RB_get_id_link(p, arrive_on_link);
 	unsigned int hashPart = id / 100;
 	
-        int i;
+    int i;
 	int n = vector_nitems(rb);
         
 	for (i = 0; i < n; i++) {
