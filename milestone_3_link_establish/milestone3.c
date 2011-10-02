@@ -81,39 +81,57 @@ static void flood3(char *packet, size_t length, int choose_link, int avoid_link)
 	}
 }
 
+
+void update_last_packet(NL_PACKET *last) {
+	int index = find_address(last->dest);
+	memcpy(&(NL_table[index].lastpacket), last, PACKET_SIZE((*last)));
+}
 /*  down_to_network() RECEIVES NEW MESSAGES FROM THE APPLICATION LAYER AND
  PREPARES THEM FOR TRANSMISSION TO OTHER NODES.
  */
 static EVENT_HANDLER( down_to_network) {
 	NL_PACKET p;
-	NL_PACKET test;
 
 	p.length = sizeof(p.msg);
 	//printf("p.length = %d, MAX_MESSAGE_SIZE = %d", p.length, MAX_MESSAGE_SIZE);
 	CHECK(CNET_read_application(&p.dest, p.msg, &p.length));
 	CNET_disable_application(p.dest);
 
-	//NL_setminmtu(p.dest, 0);
-
 	p.src = nodeinfo.address;
 	p.kind = NL_DATA;
-	p.hopcount = 0;
 	p.seqno = NL_nextpackettosend(p.dest);
+	p.hopcount = 0;
+	p.pieceStartPosition = 0;
+	p.pieceEnd = 0;
+	p.src_packet_length = (int) p.length;
+	p.checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
+	p.piece_checksum = CNET_crc32((unsigned char *) (p.msg),
+			p.src_packet_length);
+	p.trans_time = 0;
+	p.is_resent = 0;
+	update_last_packet(&p);
 
-	test.src = nodeinfo.address;
-	test.dest = p.dest;
-	test.kind = NL_TEST;
-	test.hopcount = 0;
-	test.seqno = 0;
-	test.min_mtu = INT_MAX;
-	test.length = 0;
+	if (NL_minmtu(p.dest) <= 0) {
+		NL_PACKET test;
+		test.src = nodeinfo.address;
+		test.dest = p.dest;
+		test.kind = NL_TEST;
+		test.hopcount = 0;
+		test.seqno = 0;
+		test.min_mtu = INT_MAX;
+		test.length = 0;
 
-	//printmsg((char *) &p, PACKET_SIZE(p));
-	NL_updatelastsendtest(&test);
-	flood3((char *) &test, PACKET_HEADER_SIZE, 0, 0);
+		//printmsg((char *) &p, PACKET_SIZE(p));
+		NL_updatelastsendtest(&test);
+		flood3((char *) &test, PACKET_HEADER_SIZE, 0, 0);
+	}else{
+
+	}
 
 	//flood3((char *) &p, PACKET_SIZE(p), 0, 0);
 }
+
+
 
 int check_valid_address(CnetAddr addr) {
 	if (addr < 0 || addr > 255)
@@ -226,13 +244,13 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	else {
 
 		if ((!check_valid_address(p->src)) || (!check_valid_address(p->dest)))
-			return(0);
+			return (0);
 
 		CnetAddr tmp;
 		NL_PACKET temp_p;
 		//printf("hopcount = %d\n", p->hopcount);
 		//printf("MAXHOPS = %d\n", MAXHOPS);
-		if (p->hopcount < MAXHOPS && p->hopcount >= 0) { /* if not too many hops... */
+		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
 			//printf("other's frame!\n");
 
 

@@ -9,10 +9,17 @@ typedef struct {
 	CnetAddr src;
 	CnetAddr dest;
 	NL_PACKETKIND kind; /* only ever NL_DATA or NL_ACK */
-	int seqno; /* 0, 1, 2, ... */
-	int hopcount;
+	unsigned short int seqno; /* 0, 1, 2, ... */
+	unsigned short int hopcount;
+	size_t pieceStartPosition;
+	unsigned short int pieceEnd;
 	size_t length; /* the length of the msg portion only */
-	int min_mtu;
+	size_t src_packet_length; /* dont change during routing */
+	uint32_t checksum;
+	uint32_t piece_checksum;
+	unsigned int trans_time;
+	unsigned short int is_resent;
+	unsigned int min_mtu;
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
 
