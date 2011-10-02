@@ -128,9 +128,9 @@ START_POS RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
                 	++start_pos.size;
                 }
             }
-         return start_pos;
+            break;
         }
     }
-    return -1;
+    return start_pos;
 
 }
