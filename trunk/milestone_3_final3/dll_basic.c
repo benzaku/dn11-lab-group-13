@@ -72,14 +72,12 @@ static EVENT_HANDLER( up_to_datalink) {
 
 	length = sizeof(DLL_FRAME);
 	CHECK(CNET_read_physical(&link, (char *) &f, &length));
-        printf("read physical\n");
 	NL_PACKET *p = (NL_PACKET*)&f;
 	if(p->length < 0 || p->length > MAX_MESSAGE_SIZE)
 		return;
-// 	if (p->piece_checksum != CNET_crc32((unsigned char *) (p->msg),
-// 			p->length))
-// 		return;
-	printf("DLL frame : %s\n", (char *) &f);
+	if (p->piece_checksum != CNET_crc32((unsigned char *) (p->msg),
+			p->length))
+		return;
 	CHECK(up_to_network(f.packet, length, link));
 }
 
@@ -98,7 +96,6 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			size_t len = temp.length;
                        
 			CHECK(CNET_write_physical(temp.link, temp.packet, &len));
-			printf("write_physical\n");
 
 			outQueue(&buf);
 			////("buf size after delete = %d\n", buf.size);
