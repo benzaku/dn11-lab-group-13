@@ -115,7 +115,7 @@ START_POS RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
     RB_BUF_ELEM *p_bufelem;
     int i, j;
     START_POS start_pos;
-    pos.size = 0;
+    start_pos.size = 0;
     int *temp;
     temp = start_pos.pos;
     
@@ -124,7 +124,7 @@ START_POS RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
         if(p_bufelem->id == id){
             for(j = 0; j < p->src_packet_length; j = j + p->mtu){       
                 if(p_bufelem->msg[j] == CHAR_MAX) {
-                	*(temp+size) = j;
+                	*(temp+start_pos.size) = j;
                 	++start_pos.size;
                 }
             }
