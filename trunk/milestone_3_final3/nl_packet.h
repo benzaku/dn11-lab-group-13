@@ -20,6 +20,7 @@ typedef struct {
 	uint32_t piece_checksum;
 	unsigned int trans_time;
 	unsigned short int is_resent;
+	unsigned int mtu;
 
 	char msg[MAX_MESSAGE_SIZE];
 } NL_PACKET;
