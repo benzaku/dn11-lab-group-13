@@ -56,6 +56,8 @@ int NL_gettesthascome(CnetAddr address){
 }
 
 void NL_updatelastsendtest(NL_PACKET *last) {
+	if(last->dest == 0)
+		fprintf(stdout, "HERE WE HAVE A ZERO!! src = %d, dest = %d\n",last->src, last->dest );
 	int index = find_address(last->dest);
 	//NL_PACKET * lastsend = &(NL_table[index].lastpacket);
 

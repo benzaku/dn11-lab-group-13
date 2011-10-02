@@ -93,7 +93,7 @@ static EVENT_HANDLER( down_to_network) {
 	CHECK(CNET_read_application(&p.dest, p.msg, &p.length));
 	CNET_disable_application(p.dest);
 
-	NL_setminmtu(p.dest, 0);
+	//NL_setminmtu(p.dest, 0);
 
 	p.src = nodeinfo.address;
 	p.kind = NL_DATA;
@@ -113,6 +113,13 @@ static EVENT_HANDLER( down_to_network) {
 	flood3((char *) &test, PACKET_HEADER_SIZE, 0, 0);
 
 	//flood3((char *) &p, PACKET_SIZE(p), 0, 0);
+}
+
+int check_valid_address(CnetAddr addr) {
+	if (addr < 0 || addr > 255)
+		return 0;
+	else
+		return 1;
 }
 
 /*  up_to_network() IS CALLED FROM THE DATA LINK LAYER (BELOW) TO ACCEPT
@@ -136,6 +143,9 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 		case NL_TEST_ACK:
 
+			if ((!check_valid_address(p->src))
+					|| (!check_valid_address(p->dest)))
+				break;
 			//if (p->min_mtu <= NL_minmtu(p->src))
 			//break;
 
@@ -154,6 +164,9 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			 if (NL_gettesthascome(p->src))
 			 break;
 			 */
+			if ((!check_valid_address(p->src))
+					|| (!check_valid_address(p->dest)))
+				break;
 			printf(
 					"NL_TEST come! src = %d, dest = %d, cur = %d, min mtu = %d\n",
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
@@ -212,11 +225,14 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
 
+		if ((!check_valid_address(p->src)) || (!check_valid_address(p->dest)))
+			return(0);
+
 		CnetAddr tmp;
 		NL_PACKET temp_p;
 		//printf("hopcount = %d\n", p->hopcount);
 		//printf("MAXHOPS = %d\n", MAXHOPS);
-		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
+		if (p->hopcount < MAXHOPS && p->hopcount >= 0) { /* if not too many hops... */
 			//printf("other's frame!\n");
 
 
@@ -270,11 +286,18 @@ static void timeout_check(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	//printf("======================\n");
 	int i;
 	if (NL_gettablesize() != 0) {
+		fprintf(stdout, "======================\n");
 		for (i = 0; i < NL_gettablesize(); i++) {
 			if (NL_getminmtubyid(i) == 0) {
+
+				fprintf(stdout, "nl_getdestbyid = %d, id = %d\n",
+						NL_getdestbyid(i), i);
+				NL_PACKET * temp = NL_getlastsendtest(NL_getdestbyid(i));
+				fprintf(stdout, "src = %d, dest = %d \n", temp->src, temp->dest);
+
 				flood3((char *) NL_getlastsendtest(NL_getdestbyid(i)),
 						PACKET_HEADER_SIZE, 0, 0);
-				printf("resend last test dest = %d\n", NL_getdestbyid(i));
+				//printf("resend last test dest = %d\n", NL_getdestbyid(i));
 			}
 		}
 	}
