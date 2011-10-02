@@ -105,9 +105,9 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 
 }
 
-/*
-    find all missing frame position
-*/
+// /*
+//     find all missing frame position
+// */
 void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link, START_POS *start_pos){
 
     unsigned int id = RB_get_id_link(p, arrive_on_link);
@@ -130,3 +130,4 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link, START_PO
             break;
         }
     }
+}
