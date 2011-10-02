@@ -195,12 +195,17 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                     START_POS allMissingFramePositions;
                                     RB_find_missing_piece(rb, p, arrived_on_link, &allMissingFramePositions);
                                     
+                                    int *posTemp;
+                                    posTemp = allMissingFramePositions.pos;
+                                    
                                     int numberOfMissingFrame = allMissingFramePositions.size;
                                     int i;
+                                    
                                     for(i = 0; i < numberOfMissingFrame; i++){
                                         
-                                        send_ack (p, arrived_on_link, 1);
-                                        allMissingFramePositions.pos++;
+                                        p->pieceStartPosition = *posTemp;
+                                        send_ack(p, arrived_on_link, 1);
+                                        posTemp++;
                                     }
                                     
                                     
