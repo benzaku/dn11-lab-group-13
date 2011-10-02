@@ -63,7 +63,7 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 //            for(j = 0; j < MAX_MESSAGE_SIZE; j++){
 //                bufelem.msg[j] = 0;
 //            }
-            memset(bufelem, CHAR_MAX, MAX_MESSAGE_SIZE);
+            memset(bufelem.msg, CHAR_MAX, MAX_MESSAGE_SIZE);
             
             memcpy(bufelem.msg, (char *) p->msg, p->length);
             vector_append(rb, &bufelem, RB_ELEM_SIZE);
@@ -113,7 +113,7 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link, START_PO
     unsigned int id = RB_get_id_link(p, arrive_on_link);
     int n = vector_nitems(rb);
     RB_BUF_ELEM *p_bufelem;
-    int i, j;
+    int i, pos;
     start_pos->size = 0;
     int *temp;
     temp = start_pos->pos;
@@ -121,9 +121,9 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link, START_PO
     for(i = 0; i < n; i++){
         p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
         if(p_bufelem->id == id){
-            for(j = 0; j < p->src_packet_length; j = j + p->mtu){       
-                if(p_bufelem->msg[j] == CHAR_MAX) {
-                	*(temp+start_pos->size) = j;
+            for(pos = 0; pos < p->src_packet_length; pos += p->mtu){       
+                if(p_bufelem->msg[pos] == CHAR_MAX) {
+                	*(temp+start_pos->size) = pos;
                 	++start_pos->size;
                 }
             }
