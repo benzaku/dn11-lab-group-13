@@ -307,6 +307,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 		inc_NL_packetexpected(p->src);
 		NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 		p->kind = NL_ACK;
+                p->piece_checksum = 0;
 // 		flood((char *) p, PACKET_HEADER_SIZE, arrived_on_link, 0);
 	} else if (mode_code == 2) {
 		printf("ack for outdated frame\n");

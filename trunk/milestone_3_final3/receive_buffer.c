@@ -51,6 +51,13 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
                 
             bufelem.id = id;
             bufelem.length = p->length;
+            
+            //for Initialization write all positions in buffer as 0 
+            int j;
+            for(j = 0; j < MAX_MESSAGE_SIZE; j++){
+                bufelem.msg[j] = 0;
+            }
+            
             memcpy(bufelem.msg, (char *) p->msg, p->length);
             vector_append(rb, &bufelem, RB_ELEM_SIZE);
             return 1;
@@ -91,26 +98,31 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 
 }
 
-// int RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
-// 
-//     unsigned int id = RB_get_id_link(p, arrive_on_link);
-//     int n = vector_nitems(rb);
-//     RB_BUF_ELEM *bufelem;
-//     int i, j;
-//     
-//     for(i = 0; i < n; i++){
-//         
-//         bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
-//         if(bufelem->id == id){
-//             
-//             for(j = 0; j < p->src_packet_length; j = j + p->length){
-//                 if(!bufelem->msg[j]) break;
-//             
-//             }
-//             
-//             break;
-//         }
-//     }
-//     return j;
-// 
-// }
+/*
+    find the first missing frame postion
+*/
+int RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
+
+    unsigned int id = RB_get_id_link(p, arrive_on_link);
+    int n = vector_nitems(rb);
+    RB_BUF_ELEM *p_bufelem;
+    int i, j;
+    
+    for(i = 0; i < n; i++){
+        
+        p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
+        if(p_bufelem->id == id){
+            
+            for(j = 0; j < p->src_packet_length; j = j + p->length){
+                
+                if(p_bufelem->msg[j] == 0) return j;
+            
+            }
+            
+            break;
+        }
+        break;
+    }
+    return -1;
+
+}
