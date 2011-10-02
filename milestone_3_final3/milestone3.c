@@ -209,7 +209,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                         posTemp++;
                                     }
                                     
-                                    
+                                    return 0;
                                 }
 			}
 			break;
