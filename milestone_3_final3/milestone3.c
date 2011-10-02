@@ -173,9 +173,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 			if (p->seqno == NL_packetexpected(p->src)) {
 				
-                                int isWholeMsg = RB_save_msg_link(rb, p, arrived_on_link);
-                            
-				if(isWholeMsg) {
+                                int isBufferFull = RB_save_msg_link(rb, p, arrived_on_link);
+                                
+                                // receive buffer is for this msg full
+				if(isBufferFull) {
                                     /*
                                         all pieces are arrived
                                         now get the whole msg from buffer and write it in applicaiton layer
@@ -185,7 +186,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
                                     send_ack(p, arrived_on_link, 0);
                                     return 0;
                                 
-                                } else if(!isWholeMsg && p->pieceStartPosition + p->length == p->src_packet_length){
+                                } else if(!isBufferFull && p->pieceStartPosition + p->length == p->src_packet_length){
                                     /*
                                         last piece arrives, now check the missing frame position
                                     */
