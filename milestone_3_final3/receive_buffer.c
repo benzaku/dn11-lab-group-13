@@ -108,29 +108,25 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 /*
     find all missing frame position
 */
-START_POS RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link){
+void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link, START_POS *start_pos){
 
     unsigned int id = RB_get_id_link(p, arrive_on_link);
     int n = vector_nitems(rb);
     RB_BUF_ELEM *p_bufelem;
     int i, j;
-    START_POS start_pos;
-    start_pos.size = 0;
+    start_pos->size = 0;
     int *temp;
-    temp = start_pos.pos;
+    temp = start_pos->pos;
     
     for(i = 0; i < n; i++){
         p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
         if(p_bufelem->id == id){
             for(j = 0; j < p->src_packet_length; j = j + p->mtu){       
                 if(p_bufelem->msg[j] == CHAR_MAX) {
-                	*(temp+start_pos.size) = j;
-                	++start_pos.size;
+                	*(temp+start_pos->size) = j;
+                	++start_pos->size;
                 }
             }
             break;
         }
     }
-    return start_pos;
-
-}
