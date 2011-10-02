@@ -150,10 +150,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		case NL_TEST:
 			//			if (p->min_mtu != 0 && p->min_mtu <= NL_minmtu(p->src))
 			//			break;
-/*
-			if (NL_gettesthascome(p->src))
-				break;
-*/
+			/*
+			 if (NL_gettesthascome(p->src))
+			 break;
+			 */
 			printf(
 					"NL_TEST come! src = %d, dest = %d, cur = %d, min mtu = %d\n",
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
@@ -212,7 +212,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	/* THIS PACKET IS FOR SOMEONE ELSE */
 	else {
 
-
 		CnetAddr tmp;
 		NL_PACKET temp_p;
 		//printf("hopcount = %d\n", p->hopcount);
@@ -270,12 +269,13 @@ static void timeout_check(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	//printf("timeout_check!\n");
 	//printf("======================\n");
 	int i;
-
-	for (i = 0; i < NL_gettablesize(); i++) {
-		if (NL_getminmtubyid(i) == 0) {
-			flood3((char *) NL_getlastsendtest(NL_getdestbyid(i)),
-					PACKET_HEADER_SIZE, 0, 0);
-			printf("resend last test dest = %d\n", NL_getdestbyid(i));
+	if (NL_gettablesize() != 0) {
+		for (i = 0; i < NL_gettablesize(); i++) {
+			if (NL_getminmtubyid(i) == 0) {
+				flood3((char *) NL_getlastsendtest(NL_getdestbyid(i)),
+						PACKET_HEADER_SIZE, 0, 0);
+				printf("resend last test dest = %d\n", NL_getdestbyid(i));
+			}
 		}
 	}
 	//printf("\n");
