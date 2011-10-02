@@ -5,6 +5,7 @@
 
 #include "nl_table.h"
 #include "nl_packet.h"
+#include "milestone3.h"
 
 // ---- A SIMPLE NETWORK LAYER SEQUENCE TABLE AS AN ABSTRACT DATA TYPE ----
 
@@ -13,12 +14,15 @@ typedef struct {
 	int ackexpected; // packet sequence numbers to/from node
 	int nextpackettosend;
 	int packetexpected;
-	//int minhops; // minimum known hops to remote node
+	int minhops; // minimum known hops to remote node
 	int minhop_trans_time;
 	int minhop_link; // link via which minhops path observed
 	NL_PACKET lastpacket;
 	int last_ack_expected;
 	unsigned short int has_resent;
+	NL_PACKET lasttestpacket;
+	unsigned int min_mtu;
+	int test_has_come;
 //unsigned short int resent_times; //for debug
 } NLTABLE;
 
@@ -48,9 +52,64 @@ static int find_address(CnetAddr address) {
 	//NL_table[NL_table_size].minhops = INT_MAX;
 	NL_table[NL_table_size].minhop_trans_time = INT_MAX;
 	NL_table[NL_table_size].has_resent = 0;
+	NL_table[NL_table_size].test_has_come = 0;
 	//NL_table[NL_table_size].resent_times = 0;
 	return NL_table_size++;
 }
+
+int NL_updateminmtu(CnetAddr address, int min_mtu, int link) {
+	int id = find_address(address);
+	if (NL_table[id].minhop_link == link) {
+		if (NL_table[id].min_mtu < min_mtu) {
+			NL_table[id].min_mtu = min_mtu;
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void NL_updatelastsendtest(NL_PACKET *last) {
+	int index = find_address(last->dest);
+
+	memcpy(&(NL_table[index].lasttestpacket), last, PACKET_HEADER_SIZE);
+}
+
+int NL_gettesthascome(CnetAddr address){
+	return NL_table[find_address(address)].test_has_come;
+}
+
+void NL_inctesthascome(CnetAddr address){
+	(NL_table[find_address(address)].test_has_come) ++;
+}
+
+int NL_minmtu(CnetAddr address){
+	int id = find_address(address);
+	return NL_table[id].min_mtu;
+}
+
+int NL_gethopcount(CnetAddr address){
+	int id = find_address(address);
+	return NL_table[id].minhops;
+}
+
+int	NL_gettablesize(){
+	return NL_table_size;
+}
+
+int NL_getminmtubyid(int id){
+	return NL_table[id].min_mtu;
+}
+
+NL_PACKET * NL_getlastsendtest(CnetAddr address){
+	return &(NL_table[find_address(address)].lasttestpacket);
+}
+int NL_getdestbyid(int id){
+	return NL_table[id].address;
+}
+
+/*--------
+ *
+ */
 
 int NL_ackexpected(CnetAddr address) {
 	int t = find_address(address);
@@ -136,23 +195,23 @@ static EVENT_HANDLER( show_NL_table) {
 			"nextpkttosend", "pktexpected");
 	if (given_stats)
 		//printf(" %8s %8s", "minhops", "bestlink");
-		printf(" %8s %8s", "minhop_trans_time", "bestlink");
+		printf(" %8s %8s", "min_mtu", "bestlink");
 	printf("\n");
-
+	int no_init_count = 0;
 	for (int t = 0; t < NL_table_size; ++t)
 		if (NL_table[t].address != nodeinfo.address) {
-			printf("%12d %12d %12d %12d", (int) NL_table[t].address,
+			printf("%12d %12d %12d %12d %12d", (int) NL_table[t].address,
 					NL_table[t].ackexpected, NL_table[t].nextpackettosend,
-					NL_table[t].packetexpected);
+					NL_table[t].packetexpected, NL_table[t].min_mtu);
+
 			if (NL_table[t].minhop_link != 0)
-				//printf(" %8d %8d", NL_table[t].minhops, NL_table[t].minhop_link);
-				printf(" %8d %8d", NL_table[t].minhop_trans_time,
-						NL_table[t].minhop_link);
+				printf(" %8d %8d", NL_table[t].minhops, NL_table[t].minhop_link);
+			else
+				++no_init_count;
 			printf("\n");
-			//if(NL_table[t].lastpacket){
-			//printf("last packet sent = %d\n", NL_table[t].lastpacket->seqno);
-			//}
 		}
+	printf("no_init_count = %d\n", no_init_count);
+
 }
 
 void reboot_NL_table(void) {

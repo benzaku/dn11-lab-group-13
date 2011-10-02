@@ -121,7 +121,7 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link, START_PO
     for(i = 0; i < n; i++){
         p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
         if(p_bufelem->id == id){
-            for(pos = 0; pos < p->src_packet_length; pos += p->mtu){       
+            for(pos = 0; pos < p->src_packet_length; pos += p->min_mtu){
                 if(p_bufelem->msg[pos] == CHAR_MAX) {
                 	*(temp+start_pos->size) = pos;
                 	++start_pos->size;
