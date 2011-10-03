@@ -31,7 +31,7 @@
  */
 
 CnetTimerID last_test_timeout_timer = NULLTIMER;
-CnetTimerID last_packet_timeout_timer = NULLTIMER;
+//CnetTimerID last_packet_timeout_timer = NULLTIMER;
 VECTOR rb;
 void printmsg(char * msg, size_t length) {
 	size_t i;
@@ -194,8 +194,10 @@ static EVENT_HANDLER( down_to_network) {
 		NL_updatelastsendtest(&test);
 		flood_test((char *) &test, PACKET_HEADER_SIZE, 0, 0);
 	} else {
-		//size_t mtu = NL_minmtu(p.dest);
-		//piece_to_flood((char *) &p, mtu);
+		if (NL_getnoinitcount() == 0) {
+			size_t mtu = NL_minmtu(p.dest);
+			piece_to_flood((char *) &p, mtu);
+		}
 	}
 
 }
@@ -341,7 +343,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		case NL_ACK:
 			if (p->seqno == NL_ackexpected(p->src)) {
 
-				fprintf(stdout, "here %d ACK come! from %d \n", p->dest, p->src);
+				printf("here %d ACK come! from %d \n", p->dest, p->src);
 				inc_NL_ackexpected(p->src);
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				CHECK(CNET_enable_application(p->src));
@@ -427,6 +429,15 @@ void resend_last_packet(int nl_table_id) {
 	piece_to_flood((char *) &packettoresend, mtu);
 }
 
+void send_all_saved_packet() {
+	int i = 0;
+	for (i = 0; i < NL_gettablesize(); i++) {
+		NL_PACKET packettoresend = NL_table[i].lastpacket;
+		size_t mtu = NL_table[i].min_mtu;
+		piece_to_flood((char *) &packettoresend, mtu);
+	}
+}
+
 static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 
 	CnetTime test_timeout;
@@ -455,12 +466,40 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 		}
 
 	}
+
+	/*
+	 if(NL_getnoinitcount() == 0){
+	 printf("no init count! table size = %d, count = %d\n", NL_gettablesize(), count);
+	 for (i = 0; i < NL_table_size; i++) {
+	 //printf("no: %d, ", i);
+	 if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
+	 && NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
+	 printf("packet no %d loss! resend...\n",
+	 NL_table[i].last_ack_expected);
+	 resend_last_packet(i);
+
+	 } else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
+	 printf("packet no %d not loss!\n",
+	 NL_table[i].last_ack_expected);
+	 NL_table[i].last_ack_expected = NL_table[i].ackexpected;
+	 } else {
+	 printf("Unknow condition!\n");
+	 printf("lastackexpected : %d\n", NL_table[i].last_ack_expected);
+	 }
+	 }
+	 }
+	 */
+
 	if (count < NL_gettablesize()) {
 		//printf("\n");
 		//test_timeout = (NL_gettablesize() - count) * 5000000;
 		test_timeout = NL_gettablesize() * 1250000;
 		//test_timeout = 45000000;
 		last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
+	} else {
+		printf("link establish finished!\n====================\n");
+		send_all_saved_packet();
+
 	}
 
 	/*else{
@@ -481,24 +520,28 @@ static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	//printf("timeout_check!\n");
 	//printf("======================\n");
 	int i;
-	for (i = 0; i < NL_table_size; i++) {
-		//printf("no: %d, ", i);
-		if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
-				&& NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
-			printf("packet no %d loss! resend...\n",
-					NL_table[i].last_ack_expected);
-			resend_last_packet(i);
+	if (NL_getnoinitcount() == 0) {
+		for (i = 0; i < NL_table_size; i++) {
+			//printf("no: %d, ", i);
+			if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
+					&& NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
+				printf("packet no %d loss! resend...\n",
+						NL_table[i].last_ack_expected);
+				resend_last_packet(i);
 
-		} else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
-			printf("packet no %d not loss!\n", NL_table[i].last_ack_expected);
-			NL_table[i].last_ack_expected = NL_table[i].ackexpected;
-		} else {
-			printf("Unknow condition!\n");
-			printf("lastackexpected : %d\n", NL_table[i].last_ack_expected);
+			} else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
+				printf("packet no %d not loss!\n",
+						NL_table[i].last_ack_expected);
+				NL_table[i].last_ack_expected = NL_table[i].ackexpected;
+			} else {
+				printf("Unknow condition!\n");
+				printf("lastackexpected : %d\n", NL_table[i].last_ack_expected);
+			}
 		}
 	}
 	//printf("\n");
-	test_timeout = 75000000;
+	//test_timeout = 75000000;
+	test_timeout = NL_gettablesize() * 5000000;
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER3, test_timeout, 0);
 }
 
@@ -526,6 +569,6 @@ EVENT_HANDLER( reboot_node) {
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 
 	CnetTime packet_time;
-	packet_time = 50000000;
+	packet_time = 5000000;
 	//last_packet_timeout_timer = CNET_start_timer(EV_TIMER3, packet_time, 0);
 }

@@ -161,6 +161,15 @@ void NL_savehopcount(CnetAddr address, int hops, int link) {
 	}
 }
 
+int NL_getnoinitcount() {
+	int ret = 0;
+	for (int t = 0; t < NL_table_size; ++t) {
+		if (NL_table[t].min_mtu == 0)
+			ret++;
+	}
+	return ret;
+}
+
 // -----------------------------------------------------------------
 
 static EVENT_HANDLER( show_NL_table) {
