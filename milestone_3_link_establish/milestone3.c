@@ -179,7 +179,7 @@ static EVENT_HANDLER( down_to_network) {
 	p.is_resent = 0;
 	update_last_packet(&p);
 
-	if (NL_minmtu(p.dest) <= 0) {
+	if (NL_minmtu(p.dest) <= 0 || NL_getnoinitcount()) {
 		NL_PACKET test;
 		test.src = nodeinfo.address;
 		test.dest = p.dest;
@@ -246,6 +246,11 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 	p->src = p->dest;
 	p->dest = tmpaddr;
 	flood((char *) p, PACKET_HEADER_SIZE, arrived_on_link, 0);
+}
+
+static void NL_update_lastackexpected(CnetAddr address) {
+	NL_table[find_address(address)].last_ack_expected = NL_table[find_address(
+			address)].ackexpected;
 }
 
 /*  up_to_network() IS CALLED FROM THE DATA LINK LAYER (BELOW) TO ACCEPT
@@ -340,9 +345,11 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		case NL_ACK:
 			if (p->seqno == NL_ackexpected(p->src)) {
 
-				fprintf(stdout, "here %d ACK come! from %d \n", p->dest,p->src);
+				fprintf(stdout, "here %d ACK come! from %d \n", p->dest, p->src);
 				inc_NL_ackexpected(p->src);
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+				NL_set_has_resent(p->src, 0);
+				NL_update_lastackexpected(p->src);
 				CHECK(CNET_enable_application(p->src));
 			}
 			break;
@@ -364,7 +371,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		//printf("MAXHOPS = %d\n", MAXHOPS);
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
 			//printf("other's frame!\n");
-			if (p->kind == NL_TEST_ACK){
+			if (p->kind == NL_TEST_ACK) {
 				return 0;
 			}
 			if (p->kind == NL_TEST) {
@@ -399,8 +406,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					flood_test((char *) &temp_p, PACKET_HEADER_SIZE,
 							arrived_on_link, 0);
 				}
-			}
-			else{
+			} else {
 				//NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				flood(packet, length, 0, arrived_on_link);
 			}
@@ -435,25 +441,52 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	//printf("======================\n");
 	int i;
 	if (NL_gettablesize() != 0) {
-		fprintf(stdout, "======================\n");
-		for (i = 0; i < NL_gettablesize(); i++) {
-			if (NL_getminmtubyid(i) == 0) {
+		//fprintf(stdout, "======================\n");
+		if (NL_getnoinitcount()) {
+			for (i = 0; i < NL_gettablesize(); i++) {
+				if (NL_getminmtubyid(i) == 0) {
 
-				fprintf(stdout, "nl_getdestbyid = %d, id = %d\n",
-						NL_getdestbyid(i), i);
-				NL_PACKET * temp = NL_getlastsendtest(NL_getdestbyid(i));
-				fprintf(stdout, "src = %d, dest = %d \n", temp->src, temp->dest);
+					fprintf(stdout, "nl_getdestbyid = %d, id = %d\n",
+							NL_getdestbyid(i), i);
+					NL_PACKET * temp = NL_getlastsendtest(NL_getdestbyid(i));
+					fprintf(stdout, "src = %d, dest = %d \n", temp->src,
+							temp->dest);
 
-				flood_test((char *) NL_getlastsendtest(NL_getdestbyid(i)),
-						PACKET_HEADER_SIZE, 0, 0);
-				//printf("resend last test dest = %d\n", NL_getdestbyid(i));
-			} else {
-				resend_last_packet(i);
+					flood_test((char *) NL_getlastsendtest(NL_getdestbyid(i)),
+							PACKET_HEADER_SIZE, 0, 0);
+					//printf("resend last test dest = %d\n", NL_getdestbyid(i));
+				}
+				/*
+
+				 */
 			}
 		}
+
+		else {
+
+			//resend_last_packet(i);
+			/*
+			if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
+					&& NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
+				printf("packet no %d loss! resend...\n",
+						NL_table[i].last_ack_expected);
+				resend_last_packet(i);
+
+			} else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
+				printf("packet no %d not loss!\n",
+						NL_table[i].last_ack_expected);
+				NL_table[i].last_ack_expected = NL_table[i].ackexpected;
+			} else {
+				printf("Unknow condition!\n");
+				printf("lastackexpected : %d\n", NL_table[i].last_ack_expected);
+			}
+			*/
+		}
+
+
 	}
 	//printf("\n");
-	test_timeout = 75000000;
+	test_timeout = 50000;
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 }
 /*
