@@ -97,6 +97,7 @@ static EVENT_HANDLER( up_to_datalink) {
 	}
 	NL_PACKET * tmp = (NL_PACKET *) f.packet;
 	if (tmp->kind == NL_DATA) {
+		//printf("%d ~ %d / %d\n", tmp->pieceStartPosition,tmp->pieceStartPosition + tmp->length, tmp->src_packet_length);
 		if (valid_link_length(tmp->length, link) && tmp->msg) {
 
 			if (tmp->piece_checksum == CNET_crc32((unsigned char *) (tmp->msg),
