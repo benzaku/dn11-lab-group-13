@@ -30,7 +30,7 @@
  2%) but as the NL table improves, the efficiency rises to over 64%.
  */
 
-static CnetTimerID last_packet_timeout_timer = NULLTIMER;
+static CnetTimerID last_test_timeout_timer = NULLTIMER;
 VECTOR rb;
 void printmsg(char * msg, size_t length) {
 	size_t i;
@@ -85,6 +85,7 @@ static void flood_test(char *packet, size_t length, int choose_link,
 		int links_wanted = NL_linksofminhops(p->dest);
 
 		int link;
+		int mtu_ori = p->min_mtu;
 
 		for (link = 1; link <= nodeinfo.nlinks; ++link) {
 
@@ -94,7 +95,7 @@ static void flood_test(char *packet, size_t length, int choose_link,
 			if (links_wanted & (1 << link)) /* use this link if wanted */
 			{
 				//printf("links wanted = %d\n", links_wanted);
-				if (linkinfo[link].mtu < p->min_mtu)
+				if (linkinfo[link].mtu < mtu_ori)
 					p->min_mtu = linkinfo[link].mtu;
 				//printf("down to datalink! link = %d, length = %d\n", link,
 				//	length);
@@ -339,7 +340,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		case NL_ACK:
 			if (p->seqno == NL_ackexpected(p->src)) {
 
-				fprintf(stdout, "ACK come!\n");
+				fprintf(stdout, "here %d ACK come! from %d \n", p->dest,p->src);
 				inc_NL_ackexpected(p->src);
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				CHECK(CNET_enable_application(p->src));
@@ -363,38 +364,45 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		//printf("MAXHOPS = %d\n", MAXHOPS);
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
 			//printf("other's frame!\n");
+			if (p->kind == NL_TEST_ACK){
+				return 0;
+			}
+			if (p->kind == NL_TEST) {
+				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+				NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 
+				temp_p.src = p->src;
+				temp_p.dest = p->dest;
+				temp_p.min_mtu = p->min_mtu;
+				temp_p.hopcount = p->hopcount;
 
-			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-			NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
+				/* retransmit on best links *except* the one on which it arrived */
+				//if (CNET_carrier_sense(arrived_on_link) == 0)
 
-			temp_p.src = p->src;
-			temp_p.dest = p->dest;
-			temp_p.min_mtu = p->min_mtu;
-			temp_p.hopcount = p->hopcount;
+				if (NL_minmtu(temp_p.dest) != 0 && NL_minmtu(temp_p.dest) != -1) {
 
-			/* retransmit on best links *except* the one on which it arrived */
-			//if (CNET_carrier_sense(arrived_on_link) == 0)
+					if (temp_p.min_mtu > NL_minmtu(temp_p.dest)) {
+						temp_p.min_mtu = NL_minmtu(temp_p.dest);
+					}
+					//temp_p.hopcount = NL_gethopcount(temp_p.src) + NL_gethopcount(
+					//	temp_p.dest);
+					temp_p.hopcount = NL_gethopcount(temp_p.dest);
+					tmp = temp_p.dest;
+					temp_p.dest = temp_p.src;
 
-			if (NL_minmtu(temp_p.dest) != 0 && NL_minmtu(temp_p.dest) != -1) {
+					temp_p.src = tmp;
 
-				if (temp_p.min_mtu > NL_minmtu(temp_p.dest)) {
-					temp_p.min_mtu = NL_minmtu(temp_p.dest);
+					temp_p.kind = NL_TEST_ACK;
+					temp_p.length = 0;
+					printf("send query result of %d to %d, min_mtu = %d\n",
+							temp_p.src, temp_p.dest, temp_p.min_mtu);
+					flood_test((char *) &temp_p, PACKET_HEADER_SIZE,
+							arrived_on_link, 0);
 				}
-				//temp_p.hopcount = NL_gethopcount(temp_p.src) + NL_gethopcount(
-				//	temp_p.dest);
-				temp_p.hopcount = NL_gethopcount(temp_p.dest);
-				tmp = temp_p.dest;
-				temp_p.dest = temp_p.src;
-
-				temp_p.src = tmp;
-
-				temp_p.kind = NL_TEST_ACK;
-				temp_p.length = 0;
-				printf("send query result of %d to %d, min_mtu = %d\n",
-						temp_p.src, temp_p.dest, temp_p.min_mtu);
-				flood_test((char *) &temp_p, PACKET_HEADER_SIZE,
-						arrived_on_link, 0);
+			}
+			else{
+				//NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+				flood(packet, length, 0, arrived_on_link);
 			}
 
 			//printf("forwarding src = %d to dest = %d\n", p->src, p->dest);
@@ -408,10 +416,20 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	return (0);
 }
 
+void resend_last_packet(int nl_table_id) {
+	NL_PACKET packettoresend = NL_table[nl_table_id].lastpacket;
 
-static void timeout_check(CnetEvent ev, CnetTimerID timer, CnetData data) {
+	//int len = PACKET_HEADER_SIZE + packettoresend.length;
+	packettoresend.is_resent = 1;
+	NL_set_has_resent(NL_table[nl_table_id].address, 1);
+	//NL_inc_resent_times(p->src); // for debug
+	size_t mtu = NL_table[nl_table_id].min_mtu;
+	piece_to_flood((char *) &packettoresend, mtu);
+}
 
-	CnetTime packet_timeout;
+static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
+
+	CnetTime test_timeout;
 	//printf("======================\n");
 	//printf("timeout_check!\n");
 	//printf("======================\n");
@@ -429,13 +447,44 @@ static void timeout_check(CnetEvent ev, CnetTimerID timer, CnetData data) {
 				flood_test((char *) NL_getlastsendtest(NL_getdestbyid(i)),
 						PACKET_HEADER_SIZE, 0, 0);
 				//printf("resend last test dest = %d\n", NL_getdestbyid(i));
+			} else {
+				resend_last_packet(i);
 			}
 		}
 	}
 	//printf("\n");
-	packet_timeout = 75000000;
-	last_packet_timeout_timer = CNET_start_timer(EV_TIMER2, packet_timeout, 0);
+	test_timeout = 75000000;
+	last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 }
+/*
+ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
+
+ CnetTime test_timeout;
+ //printf("======================\n");
+ //printf("timeout_check!\n");
+ //printf("======================\n");
+ int i;
+ if (NL_gettablesize() != 0) {
+ fprintf(stdout, "======================\n");
+ for (i = 0; i < NL_gettablesize(); i++) {
+ if (NL_getminmtubyid(i) == 0) {
+
+ fprintf(stdout, "nl_getdestbyid = %d, id = %d\n",
+ NL_getdestbyid(i), i);
+ NL_PACKET * temp = NL_getlastsendtest(NL_getdestbyid(i));
+ fprintf(stdout, "src = %d, dest = %d \n", temp->src, temp->dest);
+
+ flood_test((char *) NL_getlastsendtest(NL_getdestbyid(i)),
+ PACKET_HEADER_SIZE, 0, 0);
+ //printf("resend last test dest = %d\n", NL_getdestbyid(i));
+ }
+ }
+ }
+ //printf("\n");
+ test_timeout = 75000000;
+ last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
+ }
+ */
 
 /* ----------------------------------------------------------------------- */
 
@@ -449,11 +498,14 @@ EVENT_HANDLER( reboot_node) {
 	reboot_NL_table();
 
 	CHECK(CNET_set_handler(EV_APPLICATIONREADY, down_to_network, 0));
-	CHECK(CNET_set_handler(EV_TIMER2, timeout_check, 0));
+	CHECK(CNET_set_handler(EV_TIMER2, timeout_check_test, 0));
+
+	//CHECK(CNET_set_handler(EV_TIMER3, packet_timeout, 0));
+
 	CHECK(CNET_enable_application(ALLNODES));
 
-	CnetTime packet_timeout;
+	CnetTime test_timeout;
 
-	packet_timeout = 50000000;
-	last_packet_timeout_timer = CNET_start_timer(EV_TIMER2, packet_timeout, 0);
+	test_timeout = 50000000;
+	last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 }

@@ -12,13 +12,15 @@ typedef struct {
 	int ackexpected; // packet sequence numbers to/from node
 	int nextpackettosend;
 	int packetexpected;
-
-	int min_mtu;
 	int minhops; // minimum known hops to remote node
+	int minhop_trans_time;
 	int minhop_link; // link via which minhops path observed
-	int test_has_come;
-	NL_PACKET lasttestpacket;
 	NL_PACKET lastpacket;
+	int last_ack_expected;
+	unsigned short int has_resent;
+	NL_PACKET lasttestpacket;
+	unsigned int min_mtu;
+	int test_has_come;
 } NLTABLE;
 
 static NLTABLE *NL_table = NULL;
@@ -44,21 +46,27 @@ static int find_address(CnetAddr address) {
 	return NL_table_size++;
 }
 
-NL_PACKET * NL_getlastsendtest(CnetAddr address){
+void NL_set_has_resent(CnetAddr address, unsigned short int value) {
+	int t = find_address(address);
+	NL_table[t].has_resent = value;
+}
+
+NL_PACKET * NL_getlastsendtest(CnetAddr address) {
 	return &(NL_table[find_address(address)].lasttestpacket);
 }
 
-void NL_inctesthascome(CnetAddr address){
-	(NL_table[find_address(address)].test_has_come) ++;
+void NL_inctesthascome(CnetAddr address) {
+	(NL_table[find_address(address)].test_has_come)++;
 }
 
-int NL_gettesthascome(CnetAddr address){
+int NL_gettesthascome(CnetAddr address) {
 	return NL_table[find_address(address)].test_has_come;
 }
 
 void NL_updatelastsendtest(NL_PACKET *last) {
-	if(last->dest == 0)
-		fprintf(stdout, "HERE WE HAVE A ZERO!! src = %d, dest = %d\n",last->src, last->dest );
+	if (last->dest == 0)
+		fprintf(stdout, "HERE WE HAVE A ZERO!! src = %d, dest = %d\n",
+				last->src, last->dest);
 	int index = find_address(last->dest);
 	//NL_PACKET * lastsend = &(NL_table[index].lastpacket);
 
@@ -67,31 +75,29 @@ void NL_updatelastsendtest(NL_PACKET *last) {
 	//free(temp);
 }
 
-
-int NL_getdestbyid(int id){
+int NL_getdestbyid(int id) {
 	return NL_table[id].address;
 }
 
-int	NL_gettablesize(){
+int NL_gettablesize() {
 	return NL_table_size;
 }
 
-int NL_getminmtubyid(int id){
+int NL_getminmtubyid(int id) {
 	return NL_table[id].min_mtu;
 }
 
-
-void NL_setminmtu(CnetAddr address, int value){
+void NL_setminmtu(CnetAddr address, int value) {
 	int id = find_address(address);
 	NL_table[id].min_mtu = value;
 }
 
-int NL_gethopcount(CnetAddr address){
+int NL_gethopcount(CnetAddr address) {
 	int id = find_address(address);
 	return NL_table[id].minhops;
 }
 
-int NL_minmtu(CnetAddr address){
+int NL_minmtu(CnetAddr address) {
 	int id = find_address(address);
 	return NL_table[id].min_mtu;
 }
@@ -174,7 +180,7 @@ static EVENT_HANDLER( show_NL_table) {
 			if (NL_table[t].minhop_link != 0)
 				printf(" %8d %8d", NL_table[t].minhops, NL_table[t].minhop_link);
 			else
-				++ no_init_count;
+				++no_init_count;
 			printf("\n");
 		}
 	printf("no_init_count = %d\n", no_init_count);

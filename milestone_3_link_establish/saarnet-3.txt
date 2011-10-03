@@ -1,6 +1,6 @@
 // A (cheaper, lossy) connection to SLS is added.
 
-compile = "flooding3.c dll_basic.c nl_table.c queue.c"
+compile = "milestone3.c"
 
 #include "saarland.map"
 #include "linktypes.txt"

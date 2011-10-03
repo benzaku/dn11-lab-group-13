@@ -67,7 +67,8 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
             
             memcpy(bufelem.msg, (char *) p->msg, p->length);
             vector_append(rb, &bufelem, RB_ELEM_SIZE);
-            return 1;
+            if(bufelem.length == p->src_packet_length) return 2;
+			else return 1;
         }
 	return 0;
 }
