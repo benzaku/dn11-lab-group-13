@@ -121,10 +121,10 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 	piecePacket.seqno = tempPacket->seqno;
 	piecePacket.hopcount = tempPacket->hopcount;
 	piecePacket.pieceStartPosition = 0;
-	piecePacket.pieceEnd = 0;
+	//piecePacket.pieceEnd = 0;
 	piecePacket.src_packet_length = tempPacket->src_packet_length;
 	piecePacket.checksum = tempPacket->checksum;
-	piecePacket.trans_time = tempPacket->trans_time;
+	//piecePacket.trans_time = tempPacket->trans_time;
 	piecePacket.is_resent = tempPacket->is_resent;
 
 	while (tempLength > maxPieceLength) {
@@ -141,7 +141,7 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 		tempLength = tempLength - maxPieceLength;
 	}
 
-	piecePacket.pieceEnd = 1;
+	//piecePacket.pieceEnd = 1;
 	piecePacket.length = tempLength;
 
 	memcpy(piecePacket.msg, str, tempLength);
@@ -172,12 +172,12 @@ static EVENT_HANDLER( down_to_network) {
 	p.seqno = NL_nextpackettosend(p.dest);
 	p.hopcount = 0;
 	p.pieceStartPosition = 0;
-	p.pieceEnd = 0;
+	//p.pieceEnd = 0;
 	p.src_packet_length = (int) p.length;
 	p.checksum = CNET_crc32((unsigned char *) (p.msg), p.src_packet_length);
 	p.piece_checksum = CNET_crc32((unsigned char *) (p.msg),
 			p.src_packet_length);
-	p.trans_time = 0;
+	//p.trans_time = 0;
 	p.is_resent = 0;
 	update_last_packet(&p);
 
@@ -240,11 +240,11 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 
 	/* actually we just need to set p->length to 0 */
 	p->hopcount = 0;
-	p->pieceEnd = 1;
+	//p->pieceEnd = 1;
 	p->length = 0;
 	p->src_packet_length = 0;
 	p->checksum = 0;
-	p->trans_time = 0;
+	//p->trans_time = 0;
 	p->is_resent = 0;
 	memset(&p->msg, 0, MAX_MESSAGE_SIZE * sizeof(char));
 
