@@ -316,11 +316,13 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 		case NL_DATA:
 			if (p->seqno == NL_packetexpected(p->src)) {
-
-
-				if (RB_save_msg_link(rb, p, arrived_on_link) == 2) {
+				int save_result = RB_save_msg_link(rb, p, arrived_on_link);
+				if(save_result == -1)
+					break;
+				if (save_result == 2) {
 //					if(is_frame_missed(rb, p, arrived_on_link)==0)
 						RB_copy_whole_msg_link(rb, p, arrived_on_link);
+						flushFlag();
 //					else
 //						return 0;
 
