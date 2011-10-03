@@ -96,18 +96,21 @@ static EVENT_HANDLER( up_to_datalink) {
 		printf("read phy err\n");
 	}
 	NL_PACKET * tmp = (NL_PACKET *) f.packet;
+	if (tmp->kind == NL_DATA) {
+		if (valid_link_length(tmp->length, link) && tmp->msg) {
 
-	if (valid_link_length(tmp->length, link) && tmp->msg) {
-
-		if (tmp->piece_checksum == CNET_crc32((unsigned char *) (tmp->msg),
-				tmp->length)) {
-			CHECK(up_to_network(f.packet, length, link));
+			if (tmp->piece_checksum == CNET_crc32((unsigned char *) (tmp->msg),
+					tmp->length)) {
+				CHECK(up_to_network(f.packet, length, link));
+			} else {
+				printf("checksum wrong in dll level\n");
+			}
 		} else {
-			printf("checksum wrong in dll level\n");
+			printf("length or msg corrupt!\n");
 		}
 	}
 	else{
-		printf("length or msg corrupt!\n");
+		CHECK(up_to_network(f.packet, length, link));
 	}
 }
 
