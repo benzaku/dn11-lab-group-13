@@ -215,8 +215,8 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 	if (mode_code == 1) {
 		printf("error packet! src = %d, dest = %d, seqno = %d\n", p->src,
 				p->dest, p->seqno);
-//		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-		NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//		NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 		if (p->is_resent == 1)
 			p->kind = NL_ERR_ACK_RESENT;
 		else
@@ -226,8 +226,8 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 		printf("correct packet src = %d, dest = %d, seqno = %d\n", p->src,
 				p->dest, p->seqno);
 		inc_NL_packetexpected(p->src);
-//		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-		NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//		NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 		p->kind = NL_ACK;
 		p->piece_checksum = 0;
 		p->pieceStartPosition = 0;
@@ -289,8 +289,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					"NL_TEST_ACK come! src = %d, dest = %d, cur = %d, min mtu = %d\n",
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
 
-//			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-			NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//			NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 			NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 			break;
 
@@ -308,8 +308,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					"NL_TEST come! src = %d, dest = %d, cur = %d, min mtu = %d\n",
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
 
-//			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-			NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//			NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 			NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 			NL_inctesthascome(p->src);
 			tempaddr = p->src;
@@ -355,8 +355,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 				printf("here %d ACK come! from %d \n", p->dest, p->src);
 				inc_NL_ackexpected(p->src);
-//				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-				NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//				NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 				CHECK(CNET_enable_application(p->src));
 			}
 			break;
@@ -382,8 +382,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				return 0;
 			}
 			if (p->kind == NL_TEST) {
-//				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-				NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//				NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 				NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 
 				temp_p.src = p->src;
@@ -417,7 +417,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 							arrived_on_link, 0);
 				}
 			} else {
-//				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+//				NL_savatranstime(p->src, p->trans_time, arrived_on_link);
 				flood(packet, length, 0, arrived_on_link);
 			}
 
