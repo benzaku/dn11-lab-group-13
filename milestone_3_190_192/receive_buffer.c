@@ -140,9 +140,13 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 	}
 }
 
+/*
 void RB_delete_missing_piece(START_POS *start_pos, int pos) {
 
 }
+*/
+
+
 /*
  unsigned int RB_find_missing_interval(VECTOR rb, NL_PACKET *p,
  int arrive_on_link, START_POS *start_pos) {
