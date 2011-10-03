@@ -53,7 +53,7 @@ int down_to_datalink(int link, char *packet, size_t length) {
 	temp.packet = malloc(length);
 	memcpy(temp.packet, packet, length);
 
-	if(temp.length == 0){
+	if (temp.length == 0) {
 		printf("==============\n");
 		printf("length = 0!!!\n");
 		printf("==============\n");
@@ -65,6 +65,17 @@ int down_to_datalink(int link, char *packet, size_t length) {
 	//free(&temp);
 
 	return (0);
+}
+
+int valid_link_length(size_t length, int link) {
+	if (length < 0)
+		return 0;
+	size_t mtu = linkinfo[link].mtu;
+	if (length > (mtu - PACKET_HEADER_SIZE))
+		return 0;
+
+	return 1;
+
 }
 
 /*  up_to_datalink() RECEIVES FRAMES FROM THE PHYSICAL LAYER (BELOW) AND,
@@ -81,12 +92,23 @@ static EVENT_HANDLER( up_to_datalink) {
 	//printf("Frame from physical layer\n");
 
 	length = sizeof(DLL_FRAME);
-	if(CNET_read_physical(&link, (char *) &f, &length )!= 0){
+	if (CNET_read_physical(&link, (char *) &f, &length) != 0) {
 		printf("read phy err\n");
 	}
-	//printf("DLL frame \n");
-	//printmsg((char*) &f, length);
-	CHECK(up_to_network(f.packet, length, link));
+	NL_PACKET * tmp = (NL_PACKET *) f.packet;
+
+	if (valid_link_length(tmp->length, link) && tmp->msg) {
+
+		if (tmp->piece_checksum == CNET_crc32((unsigned char *) (tmp->msg),
+				tmp->length)) {
+			CHECK(up_to_network(f.packet, length, link));
+		} else {
+			printf("checksum wrong in dll level\n");
+		}
+	}
+	else{
+		printf("length or msg corrupt!\n");
+	}
 }
 
 static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
@@ -95,32 +117,31 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	//printf("timer 1 restart! queue length = %d\n", buf.size);
 	//if (timer == lasttimer) {
 
-		if (buf.size > 0) {
-			//printf("%d elements\n", buf.size);
-			struct elemType temp = peekQueue(&buf);
+	if (buf.size > 0) {
+		//printf("%d elements\n", buf.size);
+		struct elemType temp = peekQueue(&buf);
 
-			timeout = temp.length * (CnetTime) 8000000
-					/ linkinfo[temp.link].bandwidth;
-			//printf("timeout = %d", timeout);
-			if(timeout == 0)
-				timeout = 64000;
-			lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
-			size_t len = temp.length;
-			//printf("ready to write physical!\n");
-			if(CNET_write_physical_reliable(temp.link, temp.packet, &len) !=0 )
-			{
+		timeout = temp.length * (CnetTime) 8000000
+				/ linkinfo[temp.link].bandwidth;
+		//printf("timeout = %d", timeout);
+		if (timeout == 0)
+			timeout = 64000;
+		lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
+		size_t len = temp.length;
+		//printf("ready to write physical!\n");
+		if (CNET_write_physical(temp.link, temp.packet, &len) != 0) {
 			printf("write phy err!\n");
 			//(temp.packet, len);
-			}
-
-			outQueue(&buf);
-			//printf("buf size after delete = %d\n", buf.size);
-
-		} else {
-			//printf("no element in queue\n");
-			timeout = 50000;
-			lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
 		}
+
+		outQueue(&buf);
+		//printf("buf size after delete = %d\n", buf.size);
+
+	} else {
+		//printf("no element in queue\n");
+		timeout = 50000;
+		lasttimer = CNET_start_timer(EV_TIMER1, timeout, 0);
+	}
 	//}
 
 	//printf("timer stop!\n");

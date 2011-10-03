@@ -126,6 +126,7 @@ void piece_to_flood(char *packet, size_t mtu_from_src_to_dest) {
 	piecePacket.checksum = tempPacket->checksum;
 	piecePacket.trans_time = tempPacket->trans_time;
 	piecePacket.is_resent = tempPacket->is_resent;
+
 	while (tempLength > maxPieceLength) {
 		piecePacket.length = maxPieceLength;
 		memcpy(piecePacket.msg, str, maxPieceLength);
@@ -214,7 +215,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 	if (mode_code == 1) {
 		printf("error packet! src = %d, dest = %d, seqno = %d\n", p->src,
 				p->dest, p->seqno);
-		NL_savehopcount(p->src, p->trans_time, arrived_on_link);
+		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 		if (p->is_resent == 1)
 			p->kind = NL_ERR_ACK_RESENT;
 		else
@@ -224,7 +225,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 		printf("correct packet src = %d, dest = %d, seqno = %d\n", p->src,
 				p->dest, p->seqno);
 		inc_NL_packetexpected(p->src);
-		NL_savehopcount(p->src, p->trans_time, arrived_on_link);
+		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 		p->kind = NL_ACK;
 		p->piece_checksum = 0;
 		p->pieceStartPosition = 0;
@@ -233,6 +234,8 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 	} else if (mode_code == 2) {
 		printf("ack for outdated frame\n");
 		p->kind = NL_ACK;
+		p->piece_checksum = 0;
+		p->pieceStartPosition = 0;
 	}
 
 	/* actually we just need to set p->length to 0 */
@@ -315,29 +318,33 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 		case NL_DATA:
 			if (p->seqno == NL_packetexpected(p->src)) {
-				if (RB_save_msg_link(rb, p, arrived_on_link) == 2) {
-					/*
-					 all pieces are arrived
-					 now get the whole msg from buffer and write it in applicaiton layer
-					 */
-					RB_copy_whole_msg_link(rb, p, arrived_on_link);
-					CHECK(CNET_write_application((char*) p->msg,
-							&p->src_packet_length));
-					send_ack(p, arrived_on_link, 0);
-					return 0;
-
-				} else if (p->pieceEnd || p->is_resent) {
-					/*
-					 last piece arrives, now check the missing frame position
-					 */
-
-					// check which piece is missing and require to resend this piece
-
-					//TODO: check which piece is missing
-					//TODO: and require to resend this piece
-
+				if(RB_save_msg_link(rb, p, arrived_on_link) == 1){
+					int ret = RB_find_missing_start_pos(rb, p, arrived_on_link);
+					printf("ret == %d\n", ret);
 				}
+				else
+					printf("save error!\n");
+
 			}
+		/*
+				if (RB_save_msg_link(rb, p, arrived_on_link) == 2) {
+					RB_copy_whole_msg_link(rb, p, arrived_on_link);
+
+					if (p->checksum == CNET_crc32((unsigned char *) (p->msg),
+							p->src_packet_length)) {
+						CHECK(CNET_write_application((char*) p->msg,
+								&p->src_packet_length));
+						//send_ack(p, arrived_on_link, 0);
+						printf("CORRECT!!!\n");
+					} else {
+						printf("checksum wrong!\n");
+					}
+				}
+			} else if (p->seqno < NL_packetexpected(p->src)) {
+				printf("resend outdated packet\n");
+				send_ack(p, arrived_on_link, 2);
+			}
+			*/
 			break;
 
 		case NL_ACK:
@@ -346,7 +353,26 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				printf("here %d ACK come! from %d \n", p->dest, p->src);
 				inc_NL_ackexpected(p->src);
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+				NL_table[find_address(p->src)].last_ack_expected
+						= NL_table[find_address(p->src)].ackexpected;
 				CHECK(CNET_enable_application(p->src));
+			} else if (p->seqno < NL_ackexpected(p->src)) {
+				printf("Outdated ACK come!\n");
+			}
+			break;
+
+		case NL_ERR_ACK_RESENT:
+			if (p->seqno == NL_ackexpected(p->src)) {
+				printf("NL_ERR_ACK_RESENT !!!!\n");
+				printf("here %d err resent ACK come! from %d \n", p->dest,
+						p->src);
+				//inc_NL_ackexpected(p->src);
+				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
+				NL_table[find_address(p->src)].last_ack_expected
+						= NL_table[find_address(p->src)].ackexpected;
+				//CHECK(CNET_enable_application(p->src));
+			} else {
+				printf("outdated NL_ERR_ACK_RESENT seqno = %d\n", p->seqno);
 			}
 			break;
 
@@ -363,8 +389,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 		CnetAddr tmp;
 		NL_PACKET temp_p;
-		//printf("hopcount = %d\n", p->hopcount);
-		//printf("MAXHOPS = %d\n", MAXHOPS);
 		if (p->hopcount < MAXHOPS) { /* if not too many hops... */
 			//printf("other's frame!\n");
 			if (p->kind == NL_TEST_ACK) {
@@ -387,8 +411,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					if (temp_p.min_mtu > NL_minmtu(temp_p.dest)) {
 						temp_p.min_mtu = NL_minmtu(temp_p.dest);
 					}
-					//temp_p.hopcount = NL_gethopcount(temp_p.src) + NL_gethopcount(
-					//	temp_p.dest);
 					temp_p.hopcount = NL_gethopcount(temp_p.dest);
 					tmp = temp_p.dest;
 					temp_p.dest = temp_p.src;
@@ -403,12 +425,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 							arrived_on_link, 0);
 				}
 			} else {
-				//NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				flood(packet, length, 0, arrived_on_link);
 			}
-
-			//printf("forwarding src = %d to dest = %d\n", p->src, p->dest);
-			//flood3(packet, length, 0, arrived_on_link);
 
 		} else
 
@@ -421,10 +439,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 void resend_last_packet(int nl_table_id) {
 	NL_PACKET packettoresend = NL_table[nl_table_id].lastpacket;
 
-	//int len = PACKET_HEADER_SIZE + packettoresend.length;
 	packettoresend.is_resent = 1;
+	if (packettoresend.kind == NL_DATA)
+		printf("it's a data!\n");
 	NL_set_has_resent(NL_table[nl_table_id].address, 1);
-	//NL_inc_resent_times(p->src); // for debug
 	size_t mtu = NL_table[nl_table_id].min_mtu;
 	piece_to_flood((char *) &packettoresend, mtu);
 }
@@ -438,12 +456,16 @@ void send_all_saved_packet() {
 	}
 }
 
+void start_packet_timer() {
+	CnetTime packet_time;
+	packet_time = 5000000;
+	last_packet_timeout_timer = CNET_start_timer(EV_TIMER3, packet_time, 0);
+	printf("TIMER3 started!\n");
+}
+
 static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 
 	CnetTime test_timeout;
-	//printf("======================\n");
-	//printf("timeout_check!\n");
-	//printf("======================\n");
 	int i;
 	int count = 0;
 	if (NL_gettablesize() != 0) {
@@ -467,29 +489,6 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 
 	}
 
-	/*
-	 if(NL_getnoinitcount() == 0){
-	 printf("no init count! table size = %d, count = %d\n", NL_gettablesize(), count);
-	 for (i = 0; i < NL_table_size; i++) {
-	 //printf("no: %d, ", i);
-	 if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
-	 && NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
-	 printf("packet no %d loss! resend...\n",
-	 NL_table[i].last_ack_expected);
-	 resend_last_packet(i);
-
-	 } else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
-	 printf("packet no %d not loss!\n",
-	 NL_table[i].last_ack_expected);
-	 NL_table[i].last_ack_expected = NL_table[i].ackexpected;
-	 } else {
-	 printf("Unknow condition!\n");
-	 printf("lastackexpected : %d\n", NL_table[i].last_ack_expected);
-	 }
-	 }
-	 }
-	 */
-
 	if (count < NL_gettablesize()) {
 		//printf("\n");
 		//test_timeout = (NL_gettablesize() - count) * 5000000;
@@ -499,23 +498,14 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	} else {
 		printf("link establish finished!\n====================\n");
 		send_all_saved_packet();
+		start_packet_timer();
 
 	}
-
-	/*else{
-	 for(i = 0; i < NL_gettablesize(); i ++){
-	 resend_last_packet(i);
-	 }
-	 test_timeout = 75000000;
-	 last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
-
-	 }
-	 */
 }
 
 static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 
-	CnetTime test_timeout;
+	CnetTime packet_timeout;
 	//printf("======================\n");
 	//printf("timeout_check!\n");
 	//printf("======================\n");
@@ -527,7 +517,7 @@ static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 					&& NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
 				printf("packet no %d loss! resend...\n",
 						NL_table[i].last_ack_expected);
-				//resend_last_packet(i);
+				resend_last_packet(i);
 
 			} else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
 				printf("packet no %d not loss!\n",
@@ -539,10 +529,8 @@ static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			}
 		}
 	}
-	//printf("\n");
-	//test_timeout = 75000000;
-	test_timeout = NL_gettablesize() * 5000000;
-	last_test_timeout_timer = CNET_start_timer(EV_TIMER3, test_timeout, 0);
+	packet_timeout = NL_gettablesize() * 5000000;
+	last_test_timeout_timer = CNET_start_timer(EV_TIMER3, packet_timeout, 0);
 }
 
 /* ----------------------------------------------------------------------- */
