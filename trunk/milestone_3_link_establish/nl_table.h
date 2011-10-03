@@ -23,6 +23,7 @@ extern NL_PACKET * NL_getlastsendtest(CnetAddr address);
 extern int NL_getdestbyid(int id);
 extern int NL_gettesthascome(CnetAddr address);
 extern void NL_inctesthascome(CnetAddr address);
+extern void NL_set_has_resent(CnetAddr address, unsigned short int value) ;
 
 
 extern int NL_linksofminhops(CnetAddr address);
