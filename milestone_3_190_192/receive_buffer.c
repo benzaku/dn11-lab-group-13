@@ -63,8 +63,8 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 		bufelem.id = id;
 		bufelem.length = p->length;
 
-		//for Initialization write all positions in buffer as CHAR_MAX
-		memset(bufelem.msg, CHAR_MAX, MAX_MESSAGE_SIZE);
+		//for Initialization write all positions in buffer as UCHAR_MAX
+		memset(bufelem.msg, UCHAR_MAX, MAX_MESSAGE_SIZE);
 		memcpy(bufelem.msg, (char *) p->msg, p->length);
 
 		vector_append(rb, &bufelem, RB_ELEM_SIZE);
@@ -97,8 +97,7 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 }
 
 // 1 indicates frame missed, 0 denotes no frame missed
-unsigned short int is_frame_missed(VECTOR rb, NL_PACKET *p, int arrive_on_link,
-		START_POS *start_pos) {
+unsigned short int is_frame_missed(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	unsigned int id = RB_get_id_link(p, arrive_on_link);
 	int n = vector_nitems(rb);
 	RB_BUF_ELEM *p_bufelem;
@@ -108,7 +107,7 @@ unsigned short int is_frame_missed(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 		p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
 		if (p_bufelem->id == id) {
 			for (pos = 0; pos < (int) p->pieceStartPosition; pos += p->min_mtu) {
-				if (p_bufelem->msg[pos] == CHAR_MAX) {
+				if (p_bufelem->msg[pos] == UCHAR_MAX) {
 					return 1;
 				}
 			}
@@ -119,7 +118,7 @@ unsigned short int is_frame_missed(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 }
 
 //  find all missing frame position
-void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link,
+void RB_find_missing_pieces(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 		START_POS *start_pos) {
 
 	unsigned int id = RB_get_id_link(p, arrive_on_link);
@@ -132,7 +131,7 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 		p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
 		if (p_bufelem->id == id) {
 			for (pos = 0; pos < (int) p->pieceStartPosition; pos += p->min_mtu) {
-				if (p_bufelem->msg[pos] == CHAR_MAX) {
+				if (p_bufelem->msg[pos] == UCHAR_MAX) {
 					*(start_pos->pos + start_pos->size) = pos;
 					++start_pos->size;
 				}
@@ -156,12 +155,11 @@ int RB_find_missing_start_pos(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 		if (p_bufelem->id == id) {
 			for (start_pos = (int) p->pieceStartPosition - min_mtu; start_pos
 					>= 0; start_pos -= min_mtu) {
-				if (p_bufelem->msg[start_pos] == CHAR_MAX)
+				if (p_bufelem->msg[start_pos] == UCHAR_MAX)
 					first_missing_pos = start_pos;
 				else
 					return first_missing_pos;
 			}
-
 		}
 	}
 	return -1;
