@@ -18,7 +18,7 @@
  is remembered by the NL table, as is the link on which these packets
  arrive. This link is later used to route packets leaving for that node.
 
- The routine NL_savetranstime() is called for both NL_DATA and NL_ACK
+ The routine NL_savehopcount() is called for both NL_DATA and NL_ACK
  packets, and we even "steal" information from Network Layer packets
  that don't belong to us!
 
@@ -186,7 +186,6 @@ static EVENT_HANDLER( down_to_network) {
 		test.dest = p.dest;
 		test.kind = NL_TEST;
 		test.hopcount = 0;
-		test.trans_time = 0;
 		test.seqno = 0;
 		test.min_mtu = INT_MAX;
 		test.length = 0;
@@ -215,8 +214,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 	if (mode_code == 1) {
 		printf("error packet! src = %d, dest = %d, seqno = %d\n", p->src,
 				p->dest, p->seqno);
-		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//		NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+		NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 		if (p->is_resent == 1)
 			p->kind = NL_ERR_ACK_RESENT;
 		else
@@ -226,8 +224,7 @@ void send_ack(NL_PACKET *p, int arrived_on_link, unsigned short int mode_code) {
 		printf("correct packet src = %d, dest = %d, seqno = %d\n", p->src,
 				p->dest, p->seqno);
 		inc_NL_packetexpected(p->src);
-		NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//		NL_savetranstime(p->src, p->trans_time, arrived_on_link);
+		NL_savehopcount(p->src, p->trans_time, arrived_on_link);
 		p->kind = NL_ACK;
 		p->piece_checksum = 0;
 		p->pieceStartPosition = 0;
@@ -267,10 +264,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 	CnetAddr tempaddr;
 	//printf("up to network\n");
 	++p->hopcount; /* took 1 hop to get here */
-	int mtu = linkinfo[arrived_on_link].mtu;
-		p->trans_time += ((CnetTime) 8000 * 1000 * mtu
-				/ linkinfo[arrived_on_link].bandwidth
-				+ linkinfo[arrived_on_link].propagationdelay) * 100 / mtu;
 	//printf("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
@@ -290,7 +283,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
 
 			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//			NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 			NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 			break;
 
@@ -309,7 +301,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					p->src, p->dest, nodeinfo.address, p->min_mtu);
 
 			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//			NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 			NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 			NL_inctesthascome(p->src);
 			tempaddr = p->src;
@@ -318,7 +309,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 			p->kind = NL_TEST_ACK;
 			p->hopcount = 0;
-			p->trans_time = 0;
 			p->length = 0;
 			flood_test(packet, PACKET_HEADER_SIZE, arrived_on_link, 0);
 			break;
@@ -356,7 +346,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				printf("here %d ACK come! from %d \n", p->dest, p->src);
 				inc_NL_ackexpected(p->src);
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//				NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 				CHECK(CNET_enable_application(p->src));
 			}
 			break;
@@ -383,14 +372,12 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			}
 			if (p->kind == NL_TEST) {
 				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//				NL_savetranstime(p->src, p->trans_time, arrived_on_link);
 				NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 
 				temp_p.src = p->src;
 				temp_p.dest = p->dest;
 				temp_p.min_mtu = p->min_mtu;
 				temp_p.hopcount = p->hopcount;
-				temp_p.trans_time = p->trans_time;
 
 				/* retransmit on best links *except* the one on which it arrived */
 				//if (CNET_carrier_sense(arrived_on_link) == 0)
@@ -403,7 +390,6 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					//temp_p.hopcount = NL_gethopcount(temp_p.src) + NL_gethopcount(
 					//	temp_p.dest);
 					temp_p.hopcount = NL_gethopcount(temp_p.dest);
-					temp_p.trans_time = NL_gettranstime(temp_p.dest);
 					tmp = temp_p.dest;
 					temp_p.dest = temp_p.src;
 
@@ -417,8 +403,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 							arrived_on_link, 0);
 				}
 			} else {
-				NL_savehopcount(p->src, p->hopcount, arrived_on_link);
-//				NL_savatranstime(p->src, p->trans_time, arrived_on_link);
+				//NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 				flood(packet, length, 0, arrived_on_link);
 			}
 
