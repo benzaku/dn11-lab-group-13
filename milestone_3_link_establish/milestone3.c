@@ -180,7 +180,8 @@ static EVENT_HANDLER( down_to_network) {
 	p.is_resent = 0;
 	update_last_packet(&p);
 
-	if (NL_minmtu(p.dest) <= 0) {
+	size_t min_mtu = NL_minmtu(p.dest);
+	if (min_mtu <= 0) {
 
 		NL_PACKET test;
 		test.src = nodeinfo.address;
@@ -194,9 +195,10 @@ static EVENT_HANDLER( down_to_network) {
 		//printmsg((char *) &p, PACKET_SIZE(p));
 		NL_updatelastsendtest(&test);
 		flood_test((char *) &test, PACKET_HEADER_SIZE, 0, 0);
+		CnetTime test_timeout = 500000;
+		last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 	} else {
-		//size_t mtu = NL_minmtu(p.dest);
-		//piece_to_flood((char *) &p, mtu);
+		piece_to_flood((char *) &p, min_mtu);
 	}
 
 }
@@ -307,6 +309,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			NL_savehopcount(p->src, p->hopcount, arrived_on_link);
 			NL_updateminmtu(p->src, p->min_mtu, arrived_on_link);
 			NL_inctesthascome(p->src);
+
+			/* send back NL_TEST_ACK to source node */
 			tempaddr = p->src;
 			p->src = p->dest;
 			p->dest = tempaddr;
@@ -325,8 +329,9 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 					 now get the whole msg from buffer and write it in applicaiton layer
 					 */
 					RB_copy_whole_msg_link(rb, p, arrived_on_link);
-					CHECK(CNET_write_application((char*) p->msg,
-							&p->src_packet_length));
+					CHECK(
+							CNET_write_application((char*) p->msg,
+									&p->src_packet_length));
 					send_ack(p, arrived_on_link, 0);
 					return 0;
 
@@ -452,18 +457,13 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 						NL_getdestbyid(i), i);
 				NL_PACKET * temp = NL_getlastsendtest(NL_getdestbyid(i));
 				fprintf(stdout, "src = %d, dest = %d \n", temp->src, temp->dest);
-
-				flood_test((char *) NL_getlastsendtest(NL_getdestbyid(i)),
+				//optimized, resend last test packet
+				flood_test((char *) NL_getlastsendtestbyid(i),
 						PACKET_HEADER_SIZE, 0, 0);
+				//				flood_test((char *) NL_getlastsendtest(NL_getdestbyid(i)),
+				//						PACKET_HEADER_SIZE, 0, 0);
 				//printf("resend last test dest = %d\n", NL_getdestbyid(i));
-			}
-		}
-
-		test_timeout = 500000;
-		last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
-	} else {
-		for (i = 0; i < NL_gettablesize(); i++) {
-			if (NL_table[i].min_mtu != 0) {
+			} else {
 				if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
 						&& NL_table[i].nextpackettosend
 								> NL_table[i].ackexpected) {
@@ -483,9 +483,41 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 							NL_table[i].last_ack_expected);
 				}
 			}
+		}
+		if (i == NL_gettablesize()) {
 			CNET_stop_timer(last_test_timeout_timer);
+		} else {
+			test_timeout = 500000;
+			last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout,
+					0);
 		}
 	}
+	/*
+	 else {
+	 for (i = 0; i < NL_gettablesize(); i++) {
+	 if (NL_table[i].min_mtu != 0) {
+	 if (NL_table[i].last_ack_expected == NL_table[i].ackexpected
+	 && NL_table[i].nextpackettosend
+	 > NL_table[i].ackexpected) {
+	 printf("packet no %d loss! resend...\n",
+	 NL_table[i].last_ack_expected);
+
+	 resend_last_packet(i);
+
+	 } else if (NL_table[i].last_ack_expected
+	 < NL_table[i].ackexpected) {
+	 printf("packet no %d not loss!\n",
+	 NL_table[i].last_ack_expected);
+	 NL_table[i].last_ack_expected = NL_table[i].ackexpected;
+	 } else {
+	 printf("Unknow condition!\n");
+	 printf("lastackexpected : %d\n",
+	 NL_table[i].last_ack_expected);
+	 }
+	 }
+	 CNET_stop_timer(last_test_timeout_timer);
+	 }
+	 }*/
 
 }
 
@@ -519,7 +551,7 @@ static void timeout_check_packet(CnetEvent ev, CnetTimerID timer, CnetData data)
 
 	//printf("\n");
 	packet_timeout = 500000;
-	last_test_timeout_timer = CNET_start_timer(EV_TIMER3, packet_timeout, 0);
+	last_packet_timeout_timer = CNET_start_timer(EV_TIMER3, packet_timeout, 0);
 }
 
 /* ----------------------------------------------------------------------- */
