@@ -2,7 +2,7 @@
 // higher bandwidth, but unfortunately has a very low MTU. Still,
 // it is very reliable: No message loss, no corruption, no reordering.
 
-compile = "flooding1.c dll_basic.c nl_table.c"
+compile = "milestone3.c"
 
 #include "saarland.map"
 #include "linktypes.txt"

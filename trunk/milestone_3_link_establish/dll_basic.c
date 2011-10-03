@@ -107,7 +107,7 @@ static void timeouts(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			lasttimer = CNET_start_timer(EV_TIMER1, 1.05 * timeout, 0);
 			size_t len = temp.length;
 			//printf("ready to write physical!\n");
-			if(CNET_write_physical(temp.link, temp.packet, &len) !=0 )
+			if(CNET_write_physical_reliable(temp.link, temp.packet, &len) !=0 )
 			{
 			printf("write phy err!\n");
 			//(temp.packet, len);

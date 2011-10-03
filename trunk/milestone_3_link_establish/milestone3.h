@@ -2,7 +2,7 @@
 #define MILESTONE3_H
 
 typedef enum {
-	NL_DATA, NL_ACK, NL_TEST, NL_TEST_ACK
+	NL_DATA, NL_ACK, NL_TEST, NL_TEST_ACK, NL_ERR_ACK, NL_ERR_ACK_RESENT
 } NL_PACKETKIND;
 
 typedef struct {
