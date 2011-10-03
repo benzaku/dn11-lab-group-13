@@ -31,7 +31,7 @@
  */
 
 CnetTimerID last_test_timeout_timer = NULLTIMER;
-//CnetTimerID last_packet_timeout_timer = NULLTIMER;
+CnetTimerID last_packet_timeout_timer = NULLTIMER;
 VECTOR rb;
 void printmsg(char * msg, size_t length) {
 	size_t i;
@@ -527,7 +527,7 @@ static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 					&& NL_table[i].nextpackettosend > NL_table[i].ackexpected) {
 				printf("packet no %d loss! resend...\n",
 						NL_table[i].last_ack_expected);
-				resend_last_packet(i);
+				//resend_last_packet(i);
 
 			} else if (NL_table[i].last_ack_expected < NL_table[i].ackexpected) {
 				printf("packet no %d not loss!\n",
@@ -565,7 +565,7 @@ EVENT_HANDLER( reboot_node) {
 
 	CnetTime test_timeout;
 
-	test_timeout = 75000000;
+	test_timeout = 50000000;
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 
 	CnetTime packet_time;
