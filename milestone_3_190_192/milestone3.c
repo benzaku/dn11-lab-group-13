@@ -579,7 +579,7 @@ EVENT_HANDLER( reboot_node) {
 
 	CnetTime test_timeout;
 
-	test_timeout = 20000000;
+	test_timeout = 30000000;
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 
 	CnetTime packet_time;
