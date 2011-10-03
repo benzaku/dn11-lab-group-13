@@ -265,12 +265,10 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 		return 0;
 
 	CnetAddr tempaddr;
-	//printf("up to network\n");
 	++p->hopcount; /* took 1 hop to get here */
-	//printf("me = %d, dest = %d =======\n", nodeinfo.address, p->dest);
 	/*  IS THIS PACKET IS FOR ME? */
 	if (p->dest == nodeinfo.address) {
-		//printf("it's for me!\n========");
+
 		switch (p->kind) {
 
 		case NL_TEST_ACK:
@@ -318,24 +316,19 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 
 		case NL_DATA:
 			if (p->seqno == NL_packetexpected(p->src)) {
-				if(RB_save_msg_link(rb, p, arrived_on_link) == 1){
-					int ret = RB_find_missing_start_pos(rb, p, arrived_on_link);
-					printf("ret == %d\n", ret);
-				}
-				else
-					printf("save error!\n");
 
-			}
-		/*
+
 				if (RB_save_msg_link(rb, p, arrived_on_link) == 2) {
-					RB_copy_whole_msg_link(rb, p, arrived_on_link);
+//					if(is_frame_missed(rb, p, arrived_on_link)==0)
+						RB_copy_whole_msg_link(rb, p, arrived_on_link);
+//					else
+//						return 0;
 
 					if (p->checksum == CNET_crc32((unsigned char *) (p->msg),
 							p->src_packet_length)) {
 						CHECK(CNET_write_application((char*) p->msg,
 								&p->src_packet_length));
-						//send_ack(p, arrived_on_link, 0);
-						printf("CORRECT!!!\n");
+						send_ack(p, arrived_on_link, 0);
 					} else {
 						printf("checksum wrong!\n");
 					}
@@ -344,7 +337,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				printf("resend outdated packet\n");
 				send_ack(p, arrived_on_link, 2);
 			}
-			*/
+
 			break;
 
 		case NL_ACK:
@@ -441,9 +434,10 @@ void resend_last_packet(int nl_table_id) {
 
 	packettoresend.is_resent = 1;
 	if (packettoresend.kind == NL_DATA)
-		printf("it's a data!\n");
+		printf("it's a data!, seqno = %d\n", packettoresend.seqno);
 	NL_set_has_resent(NL_table[nl_table_id].address, 1);
 	size_t mtu = NL_table[nl_table_id].min_mtu;
+	printf("MTU == %d\n", (int)mtu);
 	piece_to_flood((char *) &packettoresend, mtu);
 }
 
