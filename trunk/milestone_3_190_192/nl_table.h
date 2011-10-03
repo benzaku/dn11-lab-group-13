@@ -1,3 +1,6 @@
+#ifndef NL_TABLE_H
+#define NL_TABLE_H
+
 #include <cnet.h>
 #include "milestone3.h"
 
@@ -28,3 +31,6 @@ extern int NL_getnoinitcount();
 
 extern int NL_linksofminhops(CnetAddr address);
 extern void NL_savehopcount(CnetAddr address, int hops, int link);
+extern void NL_savetranstime(CnetAddr address, int trans_time, int link);
+
+#endif

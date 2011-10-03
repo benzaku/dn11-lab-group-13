@@ -13,7 +13,7 @@ typedef struct {
 	int nextpackettosend;
 	int packetexpected;
 	int minhops; // minimum known hops to remote node
-	int minhop_trans_time;
+	unsigned int minhop_trans_time;
 	int minhop_link; // link via which minhops path observed
 	NL_PACKET lastpacket;
 	int last_ack_expected;
@@ -40,6 +40,7 @@ static int find_address(CnetAddr address) {
 	memset(&NL_table[NL_table_size], 0, sizeof(NLTABLE));
 	NL_table[NL_table_size].address = address;
 	NL_table[NL_table_size].minhops = INT_MAX;
+	NL_table[NL_table_size].minhop_trans_time = UINT_MAX;
 	NL_table[NL_table_size].min_mtu = 0;
 	NL_table[NL_table_size].test_has_come = 0;
 	//NL_table[NL_table_size].minhop_link = 0;
@@ -156,6 +157,15 @@ void NL_savehopcount(CnetAddr address, int hops, int link) {
 
 	if (NL_table[t].minhops > hops) {
 		NL_table[t].minhops = hops;
+		NL_table[t].minhop_link = link;
+		given_stats = true;
+	}
+}
+
+void NL_savetranstime(CnetAddr address, int trans_time, int link) {
+	int t = find_address(address);
+	if (NL_table[t].minhop_trans_time > trans_time) {
+		NL_table[t].minhop_trans_time = trans_time;
 		NL_table[t].minhop_link = link;
 		given_stats = true;
 	}
