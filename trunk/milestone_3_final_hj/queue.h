@@ -3,31 +3,42 @@
 
 #include <cnet.h>
 
-struct elemType {
+
+/************************************************************************/
+/*                    以下是关于队列链接存储操作的6种算法               */
+/************************************************************************/
+struct elemType
+{
 	int link;
 	size_t length;
 	char *packet;
 };
-struct sNode {
-	struct elemType data;
-	struct sNode *next;
+struct sNode{
+    struct elemType data;            /* 值域 */
+    struct sNode *next;        /* 链接指针 */
 };
-struct queueLK {
-	struct sNode *front;
-	struct sNode *rear;
-	int size;
+struct queueLK{
+    struct sNode *front;    /* 队首指针 */
+    struct sNode *rear;        /* 队尾指针 */
+    int size;
 };
 
-extern void initQueue(struct queueLK *hq);
+/* 1.初始化链队 */
+void initQueue(struct queueLK *hq);
 
-extern void enQueue(struct queueLK *hq, struct elemType x);
+/* 2.向链队中插入一个元素x */
+void enQueue(struct queueLK *hq, struct elemType x);
 
-extern struct elemType outQueue(struct queueLK *hq);
+/* 3.从队列中删除一个元素 */
+struct elemType outQueue(struct queueLK *hq);
 
-extern struct elemType peekQueue(struct queueLK *hq);
+/* 4.读取队首元素 */
+struct elemType peekQueue(struct queueLK *hq);
 
-extern int emptyQueue(struct queueLK *hq);
+/* 5.检查链队是否为空，若为空则返回1, 否则返回0 */
+int emptyQueue(struct queueLK *hq);
 
-extern void clearQueue(struct queueLK *hq);
+/* 6.清除链队中的所有元素 */
+void clearQueue(struct queueLK *hq);
 
 #endif
