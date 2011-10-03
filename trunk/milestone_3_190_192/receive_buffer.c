@@ -31,6 +31,8 @@ void RB_init(VECTOR rb) {
 	rb = vector_new();
 }
 
+
+static int flag = 0;
 //if success return 1, if full return 2
 int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 
@@ -46,10 +48,14 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 		temp = vector_peek(rb, i, &RB_ELEM_SIZE);
 		if (temp->id == id) {
 			//backup to new elem because of vector_replace
-
+                        
+                        if(flag != p->pieceStartPosition) return -1;
+                        flag = p->pieceStartPosition;
 			memcpy(&temp->msg[p->pieceStartPosition], (char *) p->msg,
 					p->length);
 			temp->length += p->length;
+                        
+                        flag = flag + p->length;
 			if (temp->length == p->src_packet_length)
 				return 2; //whole msg filled
 			else
@@ -74,6 +80,10 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 			return 1;
 	}
 	return 0;
+}
+
+void flushFlag(){
+    flag = 0;
 }
 
 void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
