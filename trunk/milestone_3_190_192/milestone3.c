@@ -322,7 +322,7 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 				if (save_result == 2) {
 //					if(is_frame_missed(rb, p, arrived_on_link)==0)
 						RB_copy_whole_msg_link(rb, p, arrived_on_link);
-						flushFlag();
+						//flushFlag();
 //					else
 //						return 0;
 
