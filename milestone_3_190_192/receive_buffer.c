@@ -5,6 +5,7 @@
 typedef struct {
 	unsigned int id;
 	size_t length;
+	int flag;
 	char msg[MAX_MESSAGE_SIZE];
 } RB_BUF_ELEM;
 
@@ -31,7 +32,6 @@ void RB_init(VECTOR rb) {
 	rb = vector_new();
 }
 
-int flag = 0;
 //if success return 1, if full return 2
 int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 
@@ -48,17 +48,17 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 		if (temp->id == id) {
 			//backup to new elem because of vector_replace
 
-			if (flag != p->pieceStartPosition){
-				printf("flag = %d, startpos = %d\n", flag, p->pieceStartPosition);
+			if (temp->flag != p->pieceStartPosition){
+				printf("flag = %d, startpos = %d\n", temp->flag, p->pieceStartPosition);
 				return -1;
 
 			}
-			flag = p->pieceStartPosition;
+			temp->flag = p->pieceStartPosition;
 			memcpy(&temp->msg[p->pieceStartPosition], (char *) p->msg,
 					p->length);
 			temp->length += p->length;
 
-			flag = flag + p->length;
+			temp->flag +=  p->length;
 			if (temp->length == p->src_packet_length)
 				return 2; //whole msg filled
 			else
@@ -71,14 +71,10 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 
 		bufelem.id = id;
 		bufelem.length = p->length;
-
-		//for Initialization write all positions in buffer as CHAR_MAX
-		flag = p->pieceStartPosition;
+		bufelem.flag = p->length;
 
 		memset(bufelem.msg, CHAR_MAX, MAX_MESSAGE_SIZE);
 		memcpy(bufelem.msg, (char *) p->msg, p->length);
-
-		flag = p->length;
 
 		vector_append(rb, &bufelem, RB_ELEM_SIZE);
 		if (bufelem.length == p->src_packet_length)
@@ -87,10 +83,6 @@ int RB_save_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 			return 1;
 	}
 	return 0;
-}
-
-void flushFlag() {
-	flag = 0;
 }
 
 void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
