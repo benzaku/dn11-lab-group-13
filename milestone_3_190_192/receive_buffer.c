@@ -96,6 +96,7 @@ void RB_copy_whole_msg_link(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
 	}
 }
 
+// 1 indicates frame missed, 0 denotes no frame missed
 unsigned short int is_frame_missed(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 		START_POS *start_pos) {
 	unsigned int id = RB_get_id_link(p, arrive_on_link);
@@ -114,6 +115,7 @@ unsigned short int is_frame_missed(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 			return 0;
 		}
 	}
+	return 0;
 }
 
 //  find all missing frame position
@@ -140,12 +142,36 @@ void RB_find_missing_piece(VECTOR rb, NL_PACKET *p, int arrive_on_link,
 	}
 }
 
-/*
-void RB_delete_missing_piece(START_POS *start_pos, int pos) {
+int RB_find_missing_start_pos(VECTOR rb, NL_PACKET *p, int arrive_on_link) {
+	unsigned int id = RB_get_id_link(p, arrive_on_link);
+	int n = vector_nitems(rb);
+	RB_BUF_ELEM *p_bufelem;
+	int min_mtu = (int) p->min_mtu;
+	int start_pos;// start position of a piece
+	int first_missing_pos = -1;
+	int i;
 
+	for (i = 0; i < n; i++) {
+		p_bufelem = vector_peek(rb, i, &RB_ELEM_SIZE);
+		if (p_bufelem->id == id) {
+			for (start_pos = (int) p->pieceStartPosition - min_mtu; start_pos
+					>= 0; start_pos -= min_mtu) {
+				if (p_bufelem->msg[start_pos] == CHAR_MAX)
+					first_missing_pos = start_pos;
+				else
+					return first_missing_pos;
+			}
+
+		}
+	}
+	return -1;
 }
-*/
 
+/*
+ void RB_delete_missing_piece(START_POS *start_pos, int pos) {
+
+ }
+ */
 
 /*
  unsigned int RB_find_missing_interval(VECTOR rb, NL_PACKET *p,
@@ -178,3 +204,4 @@ void RB_delete_missing_piece(START_POS *start_pos, int pos) {
  }
  }
  */
+
