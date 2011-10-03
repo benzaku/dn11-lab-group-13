@@ -1,24 +1,29 @@
-#ifndef _MILESTONE3_H_
-#define _MILESTONE3_H_
+#ifndef MILESTONE3_H
+#define MILESTONE3_H
 
-#include "nl_packet.h"
+typedef enum {
+	NL_DATA, NL_ACK, NL_TEST, NL_TEST_ACK, NL_ERR_ACK, NL_ERR_ACK_RESENT
+} NL_PACKETKIND;
+
+typedef struct {
+	CnetAddr src;
+	CnetAddr dest;
+	NL_PACKETKIND kind; /* only ever NL_DATA or NL_ACK */
+	unsigned short int seqno; /* 0, 1, 2, ... */
+	unsigned short int hopcount;
+	size_t pieceStartPosition;
+	unsigned short int pieceEnd;
+	size_t length; /* the length of the msg portion only */
+	size_t src_packet_length; /* dont change during routing */
+	uint32_t checksum;
+	uint32_t piece_checksum;
+	unsigned int trans_time;
+	unsigned short int is_resent;
+	unsigned int min_mtu;
+	char msg[MAX_MESSAGE_SIZE];
+} NL_PACKET;
 
 #define PACKET_HEADER_SIZE  (sizeof(NL_PACKET) - MAX_MESSAGE_SIZE)
-#define PACKET_SIZE(p)      (PACKET_HEADER_SIZE + p.length)
-#define MAXHOPS             10
-
-NL_PACKET *lastPacket;
-static int mtu;
-
-extern void send_ack(NL_PACKET *p, int arrived_on_link,
-		unsigned short int is_err_ack);
-extern void print_msg(char *msg, size_t length);
-extern void update_last_packet(NL_PACKET *last);
-extern NL_PACKET * get_last_packet(CnetAddr address);
-extern void sdown_pieces_to_datalink(char *packet, size_t length,
-		int choose_link);
-extern int up_to_network(char *packet, size_t length, int arrived_on_link);
-extern void up_to_application(NL_PACKET *p, int arrived_on_link);
-extern void route_packet(NL_PACKET *p, int arrived_on_link);
+#define PACKET_SIZE(p)	    (PACKET_HEADER_SIZE + p.length)
 
 #endif

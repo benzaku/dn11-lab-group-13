@@ -9,7 +9,6 @@ wan-jitter = 0usec
 #define LINK_BAD(bw, pd)      probframecorrupt = 7  probframeloss = 7  mtu =  8192bytes  bandwidth = bw Mbps  costperframe = bw  propagationdelay = pd usecs
 #define LINK_WORST(bw, pd)    probframecorrupt = 6  probframeloss = 7  mtu =  4096bytes  bandwidth = bw Mbps  costperframe = bw  propagationdelay = pd usecs
 #define LINK_XXX(bw, pd)      probframecorrupt = 6  probframeloss = 6  mtu =  2048bytes  bandwidth = bw Mbps  costperframe = bw  propagationdelay = pd usecs
-#define LINK_XXXX(bw, pd)      probframecorrupt = 1  probframeloss = 0 mtu = 96bytes  bandwidth = bw Mbps  costperframe = bw  propagationdelay = pd usecs
 
 #define LINK_LOW_MTU_K(bw, pd)  probframecorrupt = 0  probframeloss = 0  mtu =    96bytes  bandwidth = bw Kbps  costperframe = 0  propagationdelay = pd usecs
 #define LINK_GOOD_K(bw, pd)     probframecorrupt = 8  probframeloss = 9  mtu = 16384bytes  bandwidth = bw Kbps  costperframe = 0  propagationdelay = pd usecs
@@ -17,6 +16,20 @@ wan-jitter = 0usec
 #define LINK_BAD_K(bw, pd)      probframecorrupt = 7  probframeloss = 7  mtu =  8192bytes  bandwidth = bw Kbps  costperframe = 0  propagationdelay = pd usecs
 #define LINK_WORST_K(bw, pd)    probframecorrupt = 6  probframeloss = 7  mtu =  4096bytes  bandwidth = bw Kbps  costperframe = 0  propagationdelay = pd usecs
 #define LINK_XXX_K(bw, pd)      probframecorrupt = 6  probframeloss = 6  mtu =  2048bytes  bandwidth = bw Kbps  costperframe = 0  propagationdelay = pd usecs
+
+#define LINK_GOOD_K_N(bw, pd)     probframecorrupt = 0  probframeloss = 0  mtu = 16384bytes  bandwidth = bw Mbps  costperframe = 0  propagationdelay = pd usecs
+#define LINK_STD_K_N(bw, pd)      probframecorrupt = 0  probframeloss = 0  mtu =  8192bytes  bandwidth = bw Mbps  costperframe = 0  propagationdelay = pd usecs
+#define LINK_BAD_K_N(bw, pd)      probframecorrupt = 0  probframeloss = 0  mtu =  8192bytes  bandwidth = bw Mbps  costperframe = 0  propagationdelay = pd usecs
+#define LINK_WORST_K_N(bw, pd)    probframecorrupt = 0  probframeloss = 0  mtu =  4096bytes  bandwidth = bw Mbps  costperframe = 0  propagationdelay = pd usecs
+#define LINK_XXX_K_N(bw, pd)      probframecorrupt = 0  probframeloss = 0  mtu =  2048bytes  bandwidth = bw Mbps  costperframe = 0  propagationdelay = pd usecs
+
+
+#define LINK_GOOD_N(bw, pd)     probframecorrupt = 0  probframeloss = 0  mtu = 16384bytes  bandwidth = bw Kbps  costperframe = bw  propagationdelay = pd usecs
+#define LINK_STD_N(bw, pd)      probframecorrupt = 0  probframeloss = 0  mtu =  8192bytes  bandwidth = bw Kbps  costperframe = bw  propagationdelay = pd usecs
+#define LINK_BAD_N(bw, pd)      probframecorrupt = 0  probframeloss = 0  mtu =  8192bytes  bandwidth = bw Kbps  costperframe = bw  propagationdelay = pd usecs
+#define LINK_WORST_N(bw, pd)    probframecorrupt = 0  probframeloss = 0  mtu =  4096bytes  bandwidth = bw Kbps  costperframe = bw  propagationdelay = pd usecs
+#define LINK_XXX_N(bw, pd)      probframecorrupt = 0  probframeloss = 0  mtu =  2048bytes  bandwidth = bw Kbps  costperframe = bw  propagationdelay = pd usecs
+
 
 
 
