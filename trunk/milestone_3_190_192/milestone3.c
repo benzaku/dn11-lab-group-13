@@ -525,7 +525,7 @@ static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			}
 		}
 	}
-	packet_timeout = NL_gettablesize() * 15000000;
+	packet_timeout = NL_gettablesize() * 125000000;
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER3, packet_timeout, 0);
 }
 
