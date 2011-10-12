@@ -488,7 +488,7 @@ static void timeout_check_test(CnetEvent ev, CnetTimerID timer, CnetData data) {
 	if (count < NL_gettablesize()) {
 		//printf("\n");
 		//test_timeout = (NL_gettablesize() - count) * 5000000;
-		test_timeout = NL_gettablesize() * 1250000;
+		test_timeout = NL_gettablesize() * 12500000;
 		//test_timeout = 45000000;
 		last_test_timeout_timer = CNET_start_timer(EV_TIMER2, test_timeout, 0);
 	} else {
@@ -525,7 +525,7 @@ static void packet_timeout(CnetEvent ev, CnetTimerID timer, CnetData data) {
 			}
 		}
 	}
-	packet_timeout = NL_gettablesize() * 5000000;
+	packet_timeout = NL_gettablesize() * 15000000;
 	last_test_timeout_timer = CNET_start_timer(EV_TIMER3, packet_timeout, 0);
 }
 

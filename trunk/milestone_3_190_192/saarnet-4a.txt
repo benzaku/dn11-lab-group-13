@@ -1,7 +1,7 @@
 compile = "milestone3.c"
 
 #include "saarland.map"
-#include "linktypes2.txt"
+#include "linktypes3.txt"
 
 host SB {
 	x = 45388, y = 44424
