@@ -96,6 +96,8 @@ static EVENT_HANDLER( up_to_datalink) {
 		printf("read phy err\n");
 	}
 	NL_PACKET * tmp = (NL_PACKET *) f.packet;
+	if(tmp->src < 0 || tmp->src > 255 || tmp->dest < 0 || tmp->dest > 255)
+		return;
 	if (tmp->kind == NL_DATA) {
 		//printf("%d ~ %d / %d\n", tmp->pieceStartPosition,tmp->pieceStartPosition + tmp->length, tmp->src_packet_length);
 		if (valid_link_length(tmp->length, link) && tmp->msg) {
