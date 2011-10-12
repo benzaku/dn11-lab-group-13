@@ -343,6 +343,8 @@ int up_to_network(char *packet, size_t length, int arrived_on_link) {
 			break;
 
 		case NL_ACK:
+			if ((!check_valid_address(p->src)) || (!check_valid_address(p->dest)))
+						break;
 			if (p->seqno == NL_ackexpected(p->src)) {
 
 				printf("here %d ACK come! from %d \n", p->dest, p->src);
