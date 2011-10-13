@@ -9,8 +9,8 @@ host SB {
 	messagerate = 10ms // ~ 1.6 Mbps
 
 	wan to HOM { LINK_LOW_MTU(1, 3450) }
-	wan to SLS { LINK_GOOD_N(10, 2622) }
-	wan to IGB { LINK_GOOD_N(10, 1584) }
+	wan to SLS { LINK_GOOD(10, 2622) }
+	wan to IGB { LINK_GOOD(10, 1584) }
 }
 
 host IGB {
@@ -18,9 +18,9 @@ host IGB {
 	address = 185
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to SB { LINK_GOOD_N(10, 1584) }
-	wan to HOM { LINK_GOOD_N(10, 1888) }
-	wan to NK { LINK_STD_N(4, 1144) }
+	wan to SB { LINK_GOOD(10, 1584) }
+	wan to HOM { LINK_GOOD(10, 1888) }
+	wan to NK { LINK_STD(4, 1144) }
 }
 
 host HOM {
@@ -29,8 +29,8 @@ host HOM {
 	messagerate = 20ms // ~ 0.8 Mbps
 
 	wan to SB { LINK_LOW_MTU(1, 3450) }
-	wan to IGB { LINK_GOOD_N(10, 1888) }
-	wan to NK { LINK_STD_N(5, 1518) }
+	wan to IGB { LINK_GOOD(10, 1888) }
+	wan to NK { LINK_STD(5, 1518) }
 }
 
 host NK {
@@ -38,9 +38,9 @@ host NK {
 	address = 170
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to HOM { LINK_STD_N(5, 1518) }
-	wan to IGB { LINK_STD_N(4, 1144) }
-	wan to WND { LINK_STD_N(4, 1797) }
+	wan to HOM { LINK_STD(5, 1518) }
+	wan to IGB { LINK_STD(4, 1144) }
+	wan to WND { LINK_STD(4, 1797) }
 }
 
 host WND {
@@ -48,7 +48,7 @@ host WND {
 	address = 160
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to NK { LINK_STD_N(4, 1797) }
+	wan to NK { LINK_STD(4, 1797) }
 }
 
 host SLS {
@@ -56,8 +56,8 @@ host SLS {
 	address = 182
 	messagerate = 15ms // ~ 1.2 Mbps
 
-	wan to SB { LINK_GOOD_N(10, 2622) }
-	wan to DIL { LINK_STD_N(5, 632) }
+	wan to SB { LINK_GOOD(10, 2622) }
+	wan to DIL { LINK_STD(5, 632) }
 }
 
 host DIL {
@@ -65,8 +65,8 @@ host DIL {
 	address = 183
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to SLS { LINK_STD_N(5, 632) }
-	wan to MZG { LINK_STD_N(5, 1518) }
+	wan to SLS { LINK_STD(5, 632) }
+	wan to MZG { LINK_STD(5, 1518) }
 }
 
 host MZG {
@@ -74,6 +74,6 @@ host MZG {
 	address = 184
 	messagerate = 20ms // ~ 0.8 Mbps
 
-	wan to DIL { LINK_STD_N(5, 1518) }
+	wan to DIL { LINK_STD(5, 1518) }
 }
 
